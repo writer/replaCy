@@ -17,6 +17,11 @@ def test_rules_positive():
         for suggestion in r_matcher.match_dict[rule_name]["suggestions"]:
             rule_suggestions.append(" ".join([t["TEXT"] for t in suggestion]))
 
+        rule_suggestions = (seq(rule_suggestions)
+                            .map(lambda phrase: nlp(phrase))
+                            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
+                            .list())
+
         test_set = r_matcher.match_dict[rule_name]["test"]
         positive_set = test_set["positive"]
 
@@ -24,21 +29,28 @@ def test_rules_positive():
             all_suggestions = (
                 seq(r_matcher(positive_sent))
                 .flat_map(lambda span: span._.suggestions)
-                .map(lambda x: x.lower())
+                .map(lambda suggestion: nlp(suggestion))
+                .map(lambda doc: " ".join([token.lemma_ for token in doc]))
                 .list()
             )
+
             assert (
                 len(set(rule_suggestions).intersection(set(all_suggestions))) > 0
             ), "should correct"
 
 
 @xfail(raises=AssertionError)
-def test_rules_negative():
+def test_rules_positive():
     for rule_name in r_matcher.match_dict:
 
         rule_suggestions = []
         for suggestion in r_matcher.match_dict[rule_name]["suggestions"]:
             rule_suggestions.append(" ".join([t["TEXT"] for t in suggestion]))
+
+        rule_suggestions = (seq(rule_suggestions)
+                            .map(lambda phrase: nlp(phrase))
+                            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
+                            .list())
 
         test_set = r_matcher.match_dict[rule_name]["test"]
         negative_set = test_set["negative"]
@@ -47,12 +59,14 @@ def test_rules_negative():
             all_suggestions = (
                 seq(r_matcher(negative_sent))
                 .flat_map(lambda span: span._.suggestions)
-                .map(lambda x: x.lower())
+                .map(lambda suggestion: nlp(suggestion))
+                .map(lambda doc: " ".join([token.lemma_ for token in doc]))
                 .list()
             )
+
             assert (
                 len(set(rule_suggestions).intersection(set(all_suggestions))) > 0
-            ), "should not correct"
+            ), "should correct"
 
 
 def test_test_completeness():  # sic
