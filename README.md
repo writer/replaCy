@@ -4,6 +4,9 @@
 
 - `spacy >= 2.0` (not installed by default, expected nlp object)
 
+## Installation
+
+`pip install replacy`
 
 ## Quick start
 

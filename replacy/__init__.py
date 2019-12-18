@@ -6,19 +6,25 @@ from spacy.tokens import Span
 
 import replacy.custom_patterns as custom_patterns
 from replacy.inflector import Inflector
+from replacy.db import get_forms_lookup
 
 Span.set_extension("suggestions", default=[], force=True)
 Span.set_extension("description", default="", force=True)
 
 
 class ReplaceMatcher:
-    def __init__(self, nlp, match_dict):
+    def __init__(self, nlp, match_dict, forms_lookup=None):
         self.nlp = nlp
         self.matcher = Matcher(self.nlp.vocab)
         self.match_dict = match_dict
         self._init_matcher()
         self.spans = []
-        self.inflector = Inflector()
+
+        self.forms_lookup = forms_lookup
+        if not self.forms_lookup:
+            self.forms_lookup = get_forms_lookup()
+        
+        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
 
     def get_predicates(self, match_hooks):
         predicates = []

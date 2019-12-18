@@ -1,23 +1,25 @@
 import pyinflect
 import spacy
-
-from replacy.db import get_forms_dict
-
+from replacy.db import get_forms_lookup
 
 class Inflector:
-    def __init__(self, nlp=None):
-        if not nlp:
-            nlp = spacy.load("en_core_web_sm")
+    def __init__(self, nlp=None, forms_lookup=None):
+        
         self.nlp = nlp
-        self.forms_dict = get_forms_dict()
+        if not self.nlp:
+            self.nlp = spacy.load("en_core_web_sm")
+
+        self.forms_lookup = forms_lookup
+        if not self.forms_lookup:
+            self.forms_lookup = get_forms_lookup()
 
     def get_dict_form(self, verb, verb_form):
-        for k in self.forms_dict:
+        for k in self.forms_lookup:
             if (
-                verb in self.forms_dict[k].values()
-                and verb_form in self.forms_dict[k].keys()
+                verb in self.forms_lookup[k].values()
+                and verb_form in self.forms_lookup[k].keys()
             ):
-                return self.forms_dict[k][verb_form]
+                return self.forms_lookup[k][verb_form]
         return None
 
     def inflect(self, doc, suggestion, index):
