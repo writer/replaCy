@@ -28,5 +28,33 @@
                     "Mother flavours her custards with lemon extract."
                 ]
         }
+    },
+    "make-due": {
+        "patterns": [
+                {
+                    "LEMMA": "make", "TEMPLATE_ID": 1
+                },
+                {
+                    "LOWER": "due"
+                }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "make", "FROM_TEMPLATE_ID": 1
+                },
+                {
+                    "TEXT": "do"
+                }
+            ]
+        ],
+        "test": {
+                "positive": [
+                    "Viewers will have to make due with tired re-runs and second-rate movies."
+                ],
+                "negative": [
+                    "The empty vessels make the greatest sound."
+                ]
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- spaCy >= 2.0 (not installed by default, expected nlp object)
+- `spacy >= 2.0` (not installed by default, expected nlp object)
 
 
 ## Quick start
