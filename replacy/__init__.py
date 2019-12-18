@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional, Tuple, TypeVar
 import copy
 
 from functional import seq
@@ -7,8 +6,6 @@ from spacy.tokens import Span
 
 import replacy.custom_patterns as custom_patterns
 from replacy.inflector import Inflector
-
-IssueList = List[Optional[dict]]
 
 Span.set_extension("suggestions", default=[], force=True)
 Span.set_extension("description", default="", force=True)
@@ -122,7 +119,7 @@ class ReplaceMatcher:
             callback = self.get_callback(match_name, match_hooks)
             self.matcher.add(match_name, callback, patterns)
 
-    def __call__(self, sent: str) -> IssueList:
+    def __call__(self, sent: str):
         # self.spans must be cleared - global
         self.spans = []
         sent_doc = self.nlp(sent)
