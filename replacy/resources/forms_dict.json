@@ -1,0 +1,10 @@
+{
+    "exact": {
+            "VB": "exact",
+            "VBP": "exact",
+            "VBD": "exacted",
+            "VBN": "exacted",
+            "VBG": "exacting",
+            "VBZ": "exacts"
+        }
+}
