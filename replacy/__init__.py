@@ -6,24 +6,22 @@ from spacy.tokens import Span
 
 import replacy.custom_patterns as custom_patterns
 from replacy.inflector import Inflector
-from replacy.db import get_forms_lookup
+from replacy.db import get_forms_lookup, get_match_dict
 
 Span.set_extension("suggestions", default=[], force=True)
 Span.set_extension("description", default="", force=True)
 
 
 class ReplaceMatcher:
-    def __init__(self, nlp, match_dict, forms_lookup=None):
+    def __init__(self, nlp, match_dict=None, forms_lookup=None):
         self.nlp = nlp
         self.matcher = Matcher(self.nlp.vocab)
-        self.match_dict = match_dict
         self._init_matcher()
         self.spans = []
 
-        self.forms_lookup = forms_lookup
-        if not self.forms_lookup:
-            self.forms_lookup = get_forms_lookup()
-        
+        self.match_dict = match_dict if match_dict else get_match_dict()
+        self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
+
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
 
     def get_predicates(self, match_hooks):
@@ -52,7 +50,7 @@ class ReplaceMatcher:
         example of pattern and pre_suggestion
         pattern: "LEMMA": "chock", "TEMPLATE_ID": 1
         pre_suggestion: "TEXT": "chalk", "FROM_TEMPLATE_ID": 1
-        inflect suggestion "chalk" according to form of "cholk" from patterns 
+        inflect suggestion "chalk" according to form of "cholk" from patterns
         """
         text_list = []
         for item in pre_suggestion:
