@@ -7,6 +7,7 @@ from spacy.tokens import Span
 import replacy.custom_patterns as custom_patterns
 from replacy.inflector import Inflector
 from replacy.db import get_forms_lookup, get_match_dict
+from replacy.version import __version__
 
 Span.set_extension("suggestions", default=[], force=True)
 Span.set_extension("description", default="", force=True)
