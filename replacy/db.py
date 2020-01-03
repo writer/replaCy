@@ -10,11 +10,11 @@ def load_json(json_path):
     return content
 
 
-def get_forms_lookup():
-    matches_path = os.path.join(here, "resources/forms_lookup.json")
+def get_forms_lookup(forms_path="resources/forms_lookup.json"):
+    matches_path = os.path.join(here, forms_path)
     return load_json(matches_path)
 
 
-def get_match_dict():
-    matches_path = os.path.join(here, "resources/match_dict.json")
+def get_match_dict(match_path="resources/match_dict.json"):
+    matches_path = os.path.join(here, match_path)
     return load_json(matches_path)
