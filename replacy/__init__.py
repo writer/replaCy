@@ -16,13 +16,12 @@ Span.set_extension("description", default="", force=True)
 class ReplaceMatcher:
     def __init__(self, nlp, match_dict=None, forms_lookup=None):
         self.nlp = nlp
-        self.matcher = Matcher(self.nlp.vocab)
-        self._init_matcher()
-        self.spans = []
-
         self.match_dict = match_dict if match_dict else get_match_dict()
         self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
 
+        self.matcher = Matcher(self.nlp.vocab)
+        self._init_matcher()
+        self.spans = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
 
     def get_predicates(self, match_hooks):
