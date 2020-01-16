@@ -11,6 +11,7 @@ from replacy.version import __version__
 
 Span.set_extension("suggestions", default=[], force=True)
 Span.set_extension("description", default="", force=True)
+Span.set_extension("match_name", default="", force=True)
 
 
 class ReplaceMatcher:
@@ -94,6 +95,9 @@ class ReplaceMatcher:
                     break
             match_name = self.nlp.vocab[match_id].text
             span = Span(doc, start, end)
+
+            # find in match_dict if needed
+            span._.match_name = match_name
 
             pre_suggestions = self.match_dict[match_name]["suggestions"]
 
