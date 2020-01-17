@@ -18,3 +18,7 @@ def get_forms_lookup(forms_path="resources/forms_lookup.json"):
 def get_match_dict(match_path="resources/match_dict.json"):
     matches_path = os.path.join(here, match_path)
     return load_json(matches_path)
+
+def get_match_dict_schema(schema_path="resources/match_dict_schema.json"):
+    full_schema_path = os.path.join(here, schema_path)
+    return load_json(full_schema_path)

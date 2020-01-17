@@ -1,0 +1,170 @@
+{
+    "title": "Schema for validation ReplaCy Match/Replace format",
+    "type": "object",
+    "definitions": {
+        "replacyAttribute": {
+            "type": "object",
+            "properties": {
+                "ORTH": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "TEXT": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "LOWER": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "LENGTH": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "POS": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "TAG": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "DEP": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "SHAPE": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "ENT_TYPE": {
+                    "$ref": "#/definitions/spacyValue"
+                },
+                "OP": {
+                    "enum": [
+                        "!",
+                        "?",
+                        "*",
+                        "+"
+                    ]
+                },
+                "TEMPLATE_ID": {
+                    "type": "integer"
+                }
+            },
+            "patternProperties": {
+                "^IS_[A-Z]*$": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "spacyOperator": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "REGEX": {
+                    "type": "string"
+                },
+                "IN": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "NOT_IN": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "==": {
+                    "type": "number"
+                },
+                ">=": {
+                    "type": "number"
+                },
+                ">": {
+                    "type": "number"
+                },
+                "<=": {
+                    "type": "number"
+                },
+                "<": {
+                    "type": "number"
+                }
+            }
+        },
+        "spacyValue": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "integer"
+                },
+                {
+                    "$ref": "#/definitions/spacyOperator"
+                }
+            ]
+        },
+        "replacySuggestionItem": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "TEXT": {
+                    "type": "string"
+                },
+                "FROM_TEMPLATE_ID": {
+                    "type": "integer"
+                }
+            } 
+        },
+        "replacySuggestion":{
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/replacySuggestionItem"
+            }
+        }
+    },
+    "patternProperties": {
+        "^[a-z_][A-Za-z0-9_]*$": {
+            "type": "object",
+            "properties": {
+                "patterns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/replacyAttribute"
+                    },
+                    "minItems": 1
+                },
+                "suggestions": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/replacySuggestion"
+                    }
+                },
+                "test": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "positive": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "negative": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "patterns",
+                "suggestions"
+            ]
+        }
+    }
+}
