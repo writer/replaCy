@@ -1,12 +1,13 @@
 import copy
 
 from functional import seq
+from jsonschema import validate
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
 import replacy.custom_patterns as custom_patterns
+from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema
 from replacy.inflector import Inflector
-from replacy.db import get_forms_lookup, get_match_dict
 from replacy.version import __version__
 
 Span.set_extension("suggestions", default=[], force=True)
@@ -24,6 +25,11 @@ class ReplaceMatcher:
         self._init_matcher()
         self.spans = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
+
+    @staticmethod
+    def validate_match_dict(match_dict):
+        match_dict_schema = get_match_dict_schema()
+        validate(instance=match_dict, schema=match_dict_schema)
 
     def get_predicates(self, match_hooks):
         predicates = []
