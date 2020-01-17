@@ -26,3 +26,13 @@ span = rmatcher("She extracts revenge.")[0]
 span._.suggestions
 # >>> ['exacts']
 ```
+
+# Testing match_dict (json schema validation)
+
+```python
+from replacy import ReplaceMatcher
+from replacy.db import load_json
+
+match_dict = load_json('/path/to/your/match/dict')
+ReplaceMatcher.validate_match_dict(match_dict)
+```
