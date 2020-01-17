@@ -27,7 +27,7 @@ span._.suggestions
 # >>> ['exacts']
 ```
 
-# Testing match_dict (json schema validation)
+## Testing match_dict (json schema validation)
 
 ```python
 from replacy import ReplaceMatcher
