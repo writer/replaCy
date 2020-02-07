@@ -34,22 +34,19 @@ class ReplaceMatcher:
     def get_predicates(self, match_hooks):
         predicates = []
         for hook in match_hooks:
-            try:
-                # template - ex. succeeded_by_word
-                template = getattr(custom_patterns, hook["name"])
+            # template - ex. succeeded_by_word
+            template = getattr(custom_patterns, hook["name"])
 
-                # predicate - filled template ex. succeeded_by_word("to")
-                # will match "in addition to..." but not "in addition, ..."
-                pred = template(hook["args"])
+            # predicate - filled template ex. succeeded_by_word("to")
+            # will match "in addition to..." but not "in addition, ..."
+            pred = template(hook["args"])
 
-                # to confuse people for centuries to come ...
-                # negate, since positive breaks matching
-                # see cb in get_callback
-                if bool(hook.get("match_if_predicate_is", False)):
-                    pred = getattr(custom_patterns, "neg")(pred)
-                predicates.append(pred)
-            except:
-                print(f"Error loading match_hook {hook}")
+            # to confuse people for centuries to come ...
+            # negate, since positive breaks matching
+            # see cb in get_callback
+            if bool(hook.get("match_if_predicate_is", False)):
+                pred = getattr(custom_patterns, "neg")(pred)
+            predicates.append(pred)
         return predicates
 
     def inflect_suggestion(self, pre_suggestion, doc, start, end, match_name):
@@ -83,15 +80,13 @@ class ReplaceMatcher:
     def get_callback(self, match_name, match_hooks):
         """
         Most matches have the same logic to be executed each time a match is found
-        Things like adding spans to a list, checking against universal negation conditions
         Some matches have extra logic, defined in match_hooks
         """
+        # Get predicates once, callback is returned in a closure with this information
+        predicates = self.get_predicates(match_hooks)
 
         def cb(matcher, doc, i, matches):
             match_id, start, end = matches[i]
-            # now check the conditions defined in self.get_predicates
-
-            predicates = self.get_predicates(match_hooks)
 
             for pred in predicates:
                 try:
