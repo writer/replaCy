@@ -36,3 +36,12 @@ def succeeded_by_dep(dep):
 
 def preceeded_by_dep(dep):
     return lambda doc, start, end: doc[start - 1].dep_ == dep
+
+
+def surrounded_by(phrase):
+    def _surrounded_by_hook(doc, start, end):
+        preceeds = doc[:start].text.lower().endswith(phrase.lower())
+        follows = doc[end:].text.lower().startswith(phrase.lower())
+        return preceeds and follows
+
+    return _surrounded_by_match_hook
