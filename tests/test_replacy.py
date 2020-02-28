@@ -3,12 +3,14 @@ import spacy
 from replacy import ReplaceMatcher
 from replacy.db import get_match_dict
 from functional import seq
+
 xfail = pytest.mark.xfail
 
 nlp = spacy.load("en_core_web_sm")
 
 match_dict = get_match_dict()
 r_matcher = ReplaceMatcher(nlp, match_dict)
+
 
 def test_rules_positive():
     for rule_name in r_matcher.match_dict:
@@ -17,10 +19,12 @@ def test_rules_positive():
         for suggestion in r_matcher.match_dict[rule_name]["suggestions"]:
             rule_suggestions.append(" ".join([t["TEXT"] for t in suggestion]))
 
-        rule_suggestions = (seq(rule_suggestions)
-                            .map(lambda phrase: nlp(phrase))
-                            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
-                            .list())
+        rule_suggestions = (
+            seq(rule_suggestions)
+            .map(lambda phrase: nlp(phrase))
+            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
+            .list()
+        )
 
         test_set = r_matcher.match_dict[rule_name]["test"]
         positive_set = test_set["positive"]
@@ -47,10 +51,12 @@ def test_rules_positive():
         for suggestion in r_matcher.match_dict[rule_name]["suggestions"]:
             rule_suggestions.append(" ".join([t["TEXT"] for t in suggestion]))
 
-        rule_suggestions = (seq(rule_suggestions)
-                            .map(lambda phrase: nlp(phrase))
-                            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
-                            .list())
+        rule_suggestions = (
+            seq(rule_suggestions)
+            .map(lambda phrase: nlp(phrase))
+            .map(lambda doc: " ".join([token.lemma_ for token in doc]))
+            .list()
+        )
 
         test_set = r_matcher.match_dict[rule_name]["test"]
         negative_set = test_set["negative"]
