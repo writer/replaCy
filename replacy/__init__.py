@@ -10,9 +10,18 @@ from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema
 from replacy.inflector import Inflector
 from replacy.version import __version__
 
-Span.set_extension("suggestions", default=[], force=True)
-Span.set_extension("description", default="", force=True)
-Span.set_extension("match_name", default="", force=True)
+
+# set known extensions:
+known_string_extensions = ["description", "match_name", "category", "comment"]
+known_list_extensions = ["suggestions"]
+for ext in known_list_extensions:
+    Span.set_extension(ext, default=[], force=True)
+for ext in known_string_extensions:
+    Span.set_extension(ext, default="", force=True)
+
+expected_properties = (
+    ["patterns", "match_hook", "test"] + known_list_extensions + known_string_extensions
+)
 
 
 class ReplaceMatcher:
@@ -25,6 +34,37 @@ class ReplaceMatcher:
         self._init_matcher()
         self.spans = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
+
+        # set custom extensions for any unexpected keys found in the match_dict
+        novel_properites = (
+            seq(self.match_dict.values())
+            .map(lambda x: x.keys())
+            .flatten()
+            .distinct()
+            .difference(expected_properties)
+        )
+        novel_prop_defaults = {}
+        for x in self.match_dict.values():
+            for k, v in x.items():
+                if k in novel_properites and k not in novel_prop_defaults.keys():
+                    if isinstance(v, str):
+                        novel_prop_defaults[k] = ""
+                    elif isinstance(v, list):
+                        novel_prop_defaults[k] = []
+                    elif isinstance(v, dict):
+                        novel_prop_defaults[k] = {}
+                    elif isinstance(v, int):
+                        novel_prop_defaults[k] = 0
+                    elif isinstance(v, float):
+                        novel_prop_defaults[k] = 0.0
+                    elif isinstance(v, bool):
+                        novel_prop_defaults[k] = False
+                    else:
+                        # just default to whatever value we find
+                        novel_prop_defaults[k] = v
+
+        for prop, default in novel_prop_defaults.items():
+            Span.set_extension(prop, default=default, force=True)
 
     @staticmethod
     def validate_match_dict(match_dict):
@@ -107,16 +147,15 @@ class ReplaceMatcher:
                 .map(lambda x: self.inflect_suggestion(x, doc, start, end, match_name))
                 .list()
             )
-            try:
-                span._.description = self.match_dict[match_name]["description"]
-            except KeyError:
-                span._.description = ""
+            span._.description = self.match_dict[match_name].get("description", "")
+            span._.category = self.match_dict[match_name].get("category", "")
             self.spans.append(span)
 
         return cb
 
     def _init_matcher(self):
         for match_name, ps in self.match_dict.items():
+            print(ps)
             patterns = copy.deepcopy(ps["patterns"])
 
             # remove custom attributes not supported by spaCy Matcher
