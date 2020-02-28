@@ -30,28 +30,29 @@ r_matcher.match_dict.update(
     }
 )
 new_matcher = ReplaceMatcher(nlp, r_matcher.match_dict)
-t_span = new_matcher("sometest")[0]
+matched_span = new_matcher("sometest")[0]
+no_match_span = new_matcher("I will extract revenge")[0]
 
 
 def test_custom_properties_string():
-    assert t_span._.yo == "", "automatically infers string types"
+    assert no_match_span._.yo == "", "automatically infers string types"
 
 
 def test_custom_properties_list():
-    assert t_span._.whoa == [], "automatically infers list types"
+    assert no_match_span._.whoa == [], "automatically infers list types"
 
 
 def test_custom_properties_dict():
-    assert t_span._.damn == {}, "automatically infers dict types"
+    assert no_match_span._.damn == {}, "automatically infers dict types"
 
 
 def test_custom_properties_int():
-    assert t_span._.nice == 0, "automatically infers int types"
+    assert no_match_span._.nice == 0, "automatically infers int types"
 
 
 def test_custom_properties_float():
-    assert t_span._.also_nice == 0.0, "automatically infers float types"
+    assert no_match_span._.also_nice == 0.0, "automatically infers float types"
 
 
 def test_custom_properties_bool():
-    assert t_span._.meh == False, "automatically infers bool types"
+    assert no_match_span._.meh == False, "automatically infers bool types"

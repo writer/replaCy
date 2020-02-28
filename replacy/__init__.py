@@ -61,10 +61,12 @@ class ReplaceMatcher:
                         novel_prop_defaults[k] = False
                     else:
                         # just default to whatever value we find
+                        print(k, v)
                         novel_prop_defaults[k] = v
 
         for prop, default in novel_prop_defaults.items():
             Span.set_extension(prop, default=default, force=True)
+        self.novel_prop_defaults = novel_prop_defaults
 
     @staticmethod
     def validate_match_dict(match_dict):
@@ -149,13 +151,18 @@ class ReplaceMatcher:
             )
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
+            for novel_prop, default in self.novel_prop_defaults.items():
+                setattr(
+                    span._,
+                    novel_prop,
+                    self.match_dict[match_name].get(novel_prop, default),
+                )
             self.spans.append(span)
 
         return cb
 
     def _init_matcher(self):
         for match_name, ps in self.match_dict.items():
-            print(ps)
             patterns = copy.deepcopy(ps["patterns"])
 
             # remove custom attributes not supported by spaCy Matcher
