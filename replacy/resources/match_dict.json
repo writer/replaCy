@@ -1,14 +1,16 @@
 {
     "extract-revenge": {
         "patterns": [
-                {
-                    "LEMMA": "extract", "TEMPLATE_ID": 1
-                }
+            {
+                "LEMMA": "extract",
+                "TEMPLATE_ID": 1
+            }
         ],
         "suggestions": [
             [
                 {
-                    "TEXT": "exact", "FROM_TEMPLATE_ID": 1
+                    "TEXT": "exact",
+                    "FROM_TEMPLATE_ID": 1
                 }
             ]
         ],
@@ -20,28 +22,30 @@
             }
         ],
         "test": {
-                "positive": [
-                    "And at the same time extract revenge on the whites he so despises?",
-                    "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
-                ],
-                "negative": [
-                    "Mother flavours her custards with lemon extract."
-                ]
+            "positive": [
+                "And at the same time extract revenge on the whites he so despises?",
+                "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
+            ],
+            "negative": [
+                "Mother flavours her custards with lemon extract."
+            ]
         }
     },
     "make-due": {
         "patterns": [
-                {
-                    "LEMMA": "make", "TEMPLATE_ID": 1
-                },
-                {
-                    "LOWER": "due"
-                }
+            {
+                "LEMMA": "make",
+                "TEMPLATE_ID": 1
+            },
+            {
+                "LOWER": "due"
+            }
         ],
         "suggestions": [
             [
                 {
-                    "TEXT": "make", "FROM_TEMPLATE_ID": 1
+                    "TEXT": "make",
+                    "FROM_TEMPLATE_ID": 1
                 },
                 {
                     "TEXT": "do"
@@ -49,12 +53,16 @@
             ]
         ],
         "test": {
-                "positive": [
-                    "Viewers will have to make due with tired re-runs and second-rate movies."
-                ],
-                "negative": [
-                    "The empty vessels make the greatest sound."
-                ]
-        }
+            "positive": [
+                "Viewers will have to make due with tired re-runs and second-rate movies."
+            ],
+            "negative": [
+                "The empty vessels make the greatest sound."
+            ]
+        },
+        "comment": "this is an example comment",
+        "description": "The expression is \"make do\".",
+        "category": "R:VERB",
+        "unexpected": "replaCy should handle arbitrary properties here, and attach them to the relevant spans"
     }
 }
