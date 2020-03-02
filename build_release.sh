@@ -40,8 +40,16 @@ check_credential_file_exists ()
 
 update_deps ()
 {
-    pip3 install -U setuptools wheel
-    pip3 install -r requirements.txt
+    echo "quitely installing dependencies..."
+    python3 -m pip install -q --upgrade twine
+    python3 -m pip install -q setuptools wheel
+    python3 -m pip install -qr requirements.txt
+    python3 -m pip install -qr requirements-dev.txt
+}
+
+run_tests()
+{
+    python3 test.py
 }
 
 bump_version ()
@@ -63,11 +71,11 @@ upload_to_pypi ()
 {
     echo "uploading to Pypi"
     if [ $PYPIRC = "here" ]; then
-        twine upload -r pypi --config-file .pypirc dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
+        python3 -m twine upload -r pypi --config-file .pypirc dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
     elif [ $PYPIRC = "creds" ]; then
-        twine upload -r pypi --config-file "$CREDS_LOCATION" dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
+        python3 -m twine upload -r pypi --config-file "$CREDS_LOCATION" dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
     else
-        twine upload -r pypi --config-file ~/.pypirc dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
+        python3 -m twine upload -r pypi --config-file ~/.pypirc dist/"$SERVICE_NAME"-"$SUGGESTED_VERSION".tar.gz
     fi
 }
 
@@ -78,6 +86,7 @@ upload_to_pypi ()
 
 check_credential_file_exists
 update_deps
+run_tests
 bump_version
 create_dist
 upload_to_pypi
