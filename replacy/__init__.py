@@ -38,8 +38,7 @@ class ReplaceMatcher:
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
             seq(self.match_dict.values())
-            .map(lambda x: x.keys())
-            .flatten()
+            .flat_map(lambda x: x.keys())
             .distinct()
             .difference(expected_properties)
         )
@@ -151,11 +150,11 @@ class ReplaceMatcher:
             )
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
-            for novel_prop, default in self.novel_prop_defaults.items():
+            for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
                     span._,
                     novel_prop,
-                    self.match_dict[match_name].get(novel_prop, default),
+                    self.match_dict[match_name].get(novel_prop, default_value),
                 )
             self.spans.append(span)
 
