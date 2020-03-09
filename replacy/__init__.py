@@ -80,7 +80,13 @@ class ReplaceMatcher:
 
             # predicate - filled template ex. succeeded_by_word("to")
             # will match "in addition to..." but not "in addition, ..."
-            pred = template(hook["args"])
+            args = hook.get("args", None)
+            if args is not None:
+                # the match_hook needs arguments
+                pred = template(hook["args"])
+            else:
+                # the match_hook is nullary
+                pred = template()
 
             # to confuse people for centuries to come ...
             # negate, since positive breaks matching
