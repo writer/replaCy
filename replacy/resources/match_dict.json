@@ -201,5 +201,48 @@
                 "That's called a 'beer', Sam."
             ]
         }
+    },
+    "test-relatives_x_is_y": {
+        "patterns": [
+            {
+                "LEMMA": "require",
+                "POS": "VERB",
+                "DEP": {
+                    "NOT_IN": [
+                        "amod"
+                    ]
+                },
+                "TEMPLATE_ID": 1
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "need",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "relative_x_is_y",
+                "args": [
+                    "children",
+                    "dep",
+                    "csubj"
+                ],
+                "match_if_predicate_is": false
+            }
+        ],
+        "test": {
+            "positive": [
+                "Your condition is serious and requires surgery.",
+                "I require stimulants to function."
+            ],
+            "negative": [
+                "Deciphering the code requires an expert.",
+                "Making small models requires manual skill."
+            ]
+        }
     }
 }

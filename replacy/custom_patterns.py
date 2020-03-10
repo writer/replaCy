@@ -143,6 +143,41 @@ def part_of_compound() -> SpacyMatchPredicate:
     return _word_is_part_of_compound_hook
 
 
+def relative_x_is_y(arglist) -> SpacyMatchPredicate:
+    """
+    Written because I wanted to not match the verb `require` if its subject was clausal
+    aka if it had a child with child.dep_ == 'csubj'
+    So I will match_if_hook_is: false
+
+    I think this is generally useful though
+    """
+    # custom patterns have to take one value as an arg, so destructure
+    children_or_ancestors, pos_or_dep, value = arglist
+
+    # asserting that values are acceptable lets us template them in
+    assert children_or_ancestors == "children" or children_or_ancestors == "ancestors"
+    assert pos_or_dep == "pos" or pos_or_dep == "dep"
+
+    def _relatives_x_is_y(doc, start, end):
+        if end - start != 1:
+            # This only works if a single Token is matched,
+            # not a Span
+            print(
+                "replaCy match rule relative_x_is_y should only be used "
+                "on single token patterns, not for matching spans"
+            )
+            return False
+        matched_token = doc[start]
+        relatives = getattr(matched_token, children_or_ancestors, [])
+        for rel in relatives:
+            v = getattr(rel, f"{pos_or_dep}_", False)
+            if v == value:
+                return True
+        return False
+
+    return _relatives_x_is_y
+
+
 # for compatibilty with a previous version with spelling errors
 # point incorrectly spelled versions to correct versions
 # eventually deprecate these
