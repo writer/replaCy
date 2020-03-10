@@ -149,7 +149,20 @@ def relative_x_is_y(arglist) -> SpacyMatchPredicate:
     aka if it had a child with child.dep_ == 'csubj'
     So I will match_if_hook_is: false
 
-    I think this is generally useful though
+    e.g. usage looks like
+
+        {
+            "name": "relative_x_is_y",
+            "args": [
+                "children",
+                "dep",
+                "csubj"
+            ],
+            "match_if_predicate_is": false
+        }
+
+    And this can be read as "if any children of the matched pattern have
+    child.dep_ == csubj, then don't match"
     """
     # custom patterns have to take one value as an arg, so destructure
     children_or_ancestors, pos_or_dep, value = arglist
