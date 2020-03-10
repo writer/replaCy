@@ -133,5 +133,73 @@
                 "You must get a minimum of 60 questions right to pass the examination."
             ]
         }
+    },
+    "test_list_suc_pos": {
+        "patterns": [
+            {
+                "LEMMA": "do",
+                "TEMPLATE_ID": 1
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "make",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "succeeded_by_pos",
+                "args": [
+                    "PRON",
+                    "DET"
+                ],
+                "match_if_predicate_is": true
+            }
+        ],
+        "test": {
+            "positive": [
+                "You do it.",
+                "She does a dance."
+            ],
+            "negative": [
+                "I do fun things."
+            ]
+        }
+    },
+    "test_list_pre_dep": {
+        "patterns": [
+            {
+                "LOWER": "sam"
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "Samuel"
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "preceded_by_dep",
+                "args": [
+                    "ROOT",
+                    "mark"
+                ],
+                "match_if_predicate_is": true
+            }
+        ],
+        "test": {
+            "positive": [
+                "If Sam wants to party; let him",
+                "My name is Sam."
+            ],
+            "negative": [
+                "That's called a 'beer', Sam."
+            ]
+        }
     }
 }
