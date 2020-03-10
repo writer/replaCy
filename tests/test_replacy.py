@@ -44,7 +44,7 @@ def test_rules_positive():
 
 
 @xfail(raises=AssertionError)
-def test_rules_positive():
+def test_rules_negative():
     for rule_name in r_matcher.match_dict:
 
         rule_suggestions = []
