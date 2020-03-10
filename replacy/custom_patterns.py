@@ -144,7 +144,8 @@ def part_of_compound() -> SpacyMatchPredicate:
 
 
 # for compatibilty with a previous version with spelling errors
-# link incorrectly spelled versions
+# point incorrectly spelled versions to correct versions
+# eventually deprecate these
 preceeded_by_phrase = preceded_by_phrase
 preceeded_by_pos = preceded_by_pos
 preceeded_by_dep = preceded_by_dep
