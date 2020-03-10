@@ -45,3 +45,15 @@ def surrounded_by_phrase(phrase):
         return preceeds and follows
 
     return _surrounded_by_hook
+
+
+def part_of_compound():
+    def _word_is_part_of_compound_hook(doc, start, end):
+        head = doc[start]
+        is_compound = head.dep_ == "compound"
+        is_part_of_compound = any(
+            [t.dep_ == "compound" and t.head == head for t in doc]
+        )
+        return is_compound or is_part_of_compound
+
+    return _word_is_part_of_compound_hook

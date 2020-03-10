@@ -64,5 +64,38 @@
         "description": "The expression is \"make do\".",
         "category": "R:VERB",
         "unexpected": "replaCy should handle arbitrary properties here, and attach them to the relevant spans"
+    },
+    "requirement": {
+        "patterns": [
+            {
+                "LEMMA": "requirement",
+                "POS": "NOUN",
+                "TEMPLATE_ID": 1
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "need",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "part_of_compound",
+                "match_if_predicate_is": false
+            }
+        ],
+        "test": {
+            "positive": [
+                "The system has the following requirements: blood of a virgin, suffering, and cat food.",
+                "Our immediate requirement is extra staff."
+            ],
+            "negative": [
+                "There is a residency requirement for obtaining citizenship.",
+                "What is the minimum entrance requirement for this course?"
+            ]
+        }
     }
 }
