@@ -1,3 +1,12 @@
+"""
+@TODO These tests are very hard to get actionable information from
+
+We should build up the lists outside of the test functions,
+then call the test functions with @pytest.mark.parametrize
+That way, failures log which test case failed, not just one in a long list
+
+I would do this, but I am pretty sure I did it once a few PRs ago, and I guess it got overwritten
+"""
 import pytest
 import spacy
 from replacy import ReplaceMatcher

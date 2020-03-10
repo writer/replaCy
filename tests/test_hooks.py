@@ -26,4 +26,14 @@ def test_part_of_compound():
     ), "part_of_compound working means not matching when part of compound"
 
 
+def test_list_suc_pos():
+    pos = r_matcher("She does a dance.")[0]
+    assert pos._.suggestions == ["makes"]
+
+
+def test_list_suc_pos_no():
+    neg = r_matcher("I do fun things")
+    assert len(neg) == 0
+
+
 # @TODO test the rest of the functions in custom_patterns.py
