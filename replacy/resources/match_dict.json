@@ -97,5 +97,41 @@
                 "What is the minimum entrance requirement for this course?"
             ]
         }
+    },
+    "minimum": {
+        "patterns": [
+            {
+                "LOWER": "minimum",
+                "POS": "ADJ"
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "smallest"
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "succeeded_by_phrase",
+                "args": [
+                    "height",
+                    "value",
+                    "size",
+                    "number"
+                ],
+                "match_if_predicate_is": true
+            }
+        ],
+        "test": {
+            "positive": [
+                "He was only five feet nine, the minimum height for a policeman."
+            ],
+            "negative": [
+                "Raising the minimum wage would ratchet up real incomes in general.",
+                "You must get a minimum of 60 questions right to pass the examination."
+            ]
+        }
     }
 }
