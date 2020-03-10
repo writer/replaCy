@@ -4,6 +4,8 @@ If the predicate (function) returns True, the match will be ignored
 """
 import operator
 
+from typing import List, Union
+
 
 def compose(f, g):
     return lambda doc, start, end: f(g(doc, start, end))
@@ -14,8 +16,21 @@ def neg(f):
     return compose(operator.not_, f)
 
 
-def succeeded_by_phrase(phrase):
-    return lambda doc, start, end: doc[end:].text.lower().startswith(phrase.lower())
+def succeeded_by_phrase(phrase: Union[str, List[str]]):
+    if isinstance(phrase, list):
+        phrase_list = phrase
+
+        def _succeeded_by_phrase(doc, start, end):
+            bools = [doc[end:].text.lower().startswith(p.lower()) for p in phrase_list]
+            return any(bools)
+
+        return _succeeded_by_phrase
+    elif isinstance(phrase, str):
+        return lambda doc, start, end: doc[end:].text.lower().startswith(phrase.lower())
+    else:
+        raise ValueError(
+            "args of succeeded_by_phrase should be a string or list of strings"
+        )
 
 
 def preceeded_by_phrase(phrase):
