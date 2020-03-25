@@ -18,24 +18,42 @@ def succeeded_by_phrase(phrase):
     return lambda doc, start, end: doc[end:].text.lower().startswith(phrase.lower())
 
 
-def preceeded_by_phrase(phrase):
+def preceded_by_phrase(phrase):
     return lambda doc, start, end: doc[:start].text.lower().endswith(phrase.lower())
+
+# backward compatibility
+def preceeded_by_phrase(phrase):
+    raise DeprecationWarning
+    print("Use 'preceded_by_phrase' instead.")
+    return preceded_by_phrase(phrase)
 
 
 def succeeded_by_pos(pos):
     return lambda doc, start, end: doc[end].pos_ == pos
 
 
-def preceeded_by_pos(pos):
+def preceded_by_pos(pos):
     return lambda doc, start, end: doc[start - 1].pos_ == pos
+
+# backward compatibility
+def preceeded_by_pos(pos):
+    raise DeprecationWarning
+    print("Use 'preceded_by_pos' instead.")
+    return preceded_by_pos(pos)
 
 
 def succeeded_by_dep(dep):
     return lambda doc, start, end: doc[end].dep_ == dep
 
 
-def preceeded_by_dep(dep):
+def preceded_by_dep(dep):
     return lambda doc, start, end: doc[start - 1].dep_ == dep
+
+# backward compatibility
+def preceeded_by_dep(dep):
+    raise DeprecationWarning
+    print("Use 'preceded_by_dep' instead.")
+    return preceded_by_dep(dep)
 
 
 def surrounded_by_phrase(phrase):
@@ -58,8 +76,10 @@ def part_of_compound():
 
     return _word_is_part_of_compound_hook
 
+
 def succeeded_by_num():
     return lambda doc, start, end: doc[end].like_num or doc[end].pos_ == "NUM" or doc[end].is_digit
+
 
 def succeeded_by_currency():
     return lambda doc, start, end: doc[end].is_currency
