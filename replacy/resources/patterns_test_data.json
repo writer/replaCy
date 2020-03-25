@@ -1,0 +1,187 @@
+
+[
+    {
+        "hook_name": "succeeded_by_phrase",
+        "args": "up",
+        "text": "Do not, for one repulse, give up the purpose that you resolved to effect.",
+        "start": 7,
+        "end": 8,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_phrase",
+        "args": "up",
+        "text": "Give as good as one gets.",
+        "start": 0,
+        "end": 1,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_pos",
+        "args": "ADV",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 3,
+        "end": 5,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_pos",
+        "args": "ADJ",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 3,
+        "end": 5,
+        "result": false
+    },
+    {
+        "hook_name": "preceeded_by_pos",
+        "args": "AUX",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 3,
+        "end": 4,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_dep",
+        "args": "conj",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 6,
+        "end": 7,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_dep",
+        "args": "punct",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 6,
+        "end": 7,
+        "result": false
+    },
+    {
+        "hook_name": "preceeded_by_dep",
+        "args": "advmod",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 7,
+        "end": 8,
+        "result": true
+    },
+    {
+        "hook_name": "preceeded_by_dep",
+        "args": "cc",
+        "text": "Their car was bigger and therefore more comfortable.",
+        "start": 7,
+        "end": 8,
+        "result": false
+    },
+    {
+        "hook_name": "part_of_compound",
+        "args": null,
+        "text": "Our immediate requirement is extra staff.",
+        "start": 2,
+        "end": 3,
+        "result": false
+    },
+    {
+        "hook_name": "part_of_compound",
+        "args": null,
+        "text": "There is a residency requirement for obtaining citizenship.",
+        "start": 4,
+        "end": 5,
+        "result": true
+    },
+    {
+        "hook_name": "surrounded_by_phrase",
+        "args": ",",
+        "text": "The dog is young, well trained, and good natured.",
+        "start": 5,
+        "end": 7,
+        "result": true
+    },
+    {
+        "hook_name": "surrounded_by_phrase",
+        "args": ",",
+        "text": "The dog is young, well trained, and good natured.",
+        "start": 5,
+        "end": 6,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "The area is approximately 100 square kilometers.",
+        "start": 3,
+        "end": 4,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "The pies have a shelf life of approximately one week.",
+        "start": 7,
+        "end": 8,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "The conservatory measures approximately 13ft x 16ft.",
+        "start": 3,
+        "end": 4,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "Officials at the school say they received a bomb threat at approximately 11:30 a.m. today.",
+        "start": 11,
+        "end": 12,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "One pound is approximately equal to 454 grams.",
+        "start": 3,
+        "end": 4,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "The village has approximately doubled in size since 1960.",
+        "start": 4,
+        "end": 5,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_num",
+        "args": null,
+        "text": "Gain got by a lie will burn one’s fingers.",
+        "start": 7,
+        "end": 8,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_currency",
+        "args": null,
+        "text": "Approximately $150 million is to be spent on improvements.",
+        "start": 0,
+        "end": 1,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_currency",
+        "args": null,
+        "text": "I paid them £100 for the damage and I hope that's the last I'll hear of it.",
+        "start": 2,
+        "end": 3,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_currency",
+        "args": null,
+        "text": "I have debited ~100 against your account.",
+        "start": 2,
+        "end": 3,
+        "result": false
+    }
+]

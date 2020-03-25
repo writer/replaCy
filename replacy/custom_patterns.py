@@ -57,3 +57,9 @@ def part_of_compound():
         return is_compound or is_part_of_compound
 
     return _word_is_part_of_compound_hook
+
+def succeeded_by_num():
+    return lambda doc, start, end: doc[end].like_num or doc[end].pos_ == "NUM" or doc[end].is_digit
+
+def succeeded_by_currency():
+    return lambda doc, start, end: doc[end].is_currency

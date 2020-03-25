@@ -1,29 +1,25 @@
-import json
-
 import pytest
+import replacy.custom_patterns as custom_patterns
 import spacy
-from replacy import ReplaceMatcher
-from replacy.db import get_match_dict
+from replacy.db import get_patterns_test_data
 
 nlp = spacy.load("en_core_web_sm")
 
-with open("replacy/resources/match_dict.json", "r") as md:
-    match_dict = json.load(md)
-    r_matcher = ReplaceMatcher(nlp, match_dict)
+examples_list = get_patterns_test_data()
 
 
-# @TODO this should be more clear
-# also, if the match_dict.json changes, this test breaks
-# maybe we should build the match dict from a python dict, like in test_custom_props?
-def test_part_of_compound():
-    pos = "Our immediate requirement is extra staff."
-    neg = "There is a residency requirement for obtaining citizenship."
-    p_span = r_matcher(pos)[0]
-    n_span = r_matcher(neg)
-    assert p_span.text == "requirement", "part_of_compound hook should work"
-    assert (
-        len(n_span) == 0
-    ), "part_of_compound working means not matching when part of compound"
+@pytest.mark.parametrize("example", examples_list)
+def test_custom_patterns(example):
 
+    hook_name = example["hook_name"]
 
-# @TODO test the rest of the functions in custom_patterns.py
+    if example["args"]:
+        hook = getattr(custom_patterns, hook_name)(example["args"])
+    else:
+        hook = hook = getattr(custom_patterns, hook_name)()
+
+    doc = nlp(example["text"])
+    start = example["start"]
+    end = example["end"]
+
+    assert hook(doc, start, end) == example["result"], f"{hook_name} should work"

@@ -22,3 +22,7 @@ def get_match_dict(match_path="resources/match_dict.json"):
 def get_match_dict_schema(schema_path="resources/match_dict_schema.json"):
     full_schema_path = os.path.join(here, schema_path)
     return load_json(full_schema_path)
+
+def get_patterns_test_data(data_path="resources/patterns_test_data.json"):
+    test_data_path = os.path.join(here, data_path)
+    return load_json(test_data_path)
