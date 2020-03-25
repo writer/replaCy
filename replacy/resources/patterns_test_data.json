@@ -33,7 +33,7 @@
         "result": false
     },
     {
-        "hook_name": "preceeded_by_pos",
+        "hook_name": "preceded_by_pos",
         "args": "AUX",
         "text": "Their car was bigger and therefore more comfortable.",
         "start": 3,
@@ -57,7 +57,7 @@
         "result": false
     },
     {
-        "hook_name": "preceeded_by_dep",
+        "hook_name": "preceded_by_dep",
         "args": "advmod",
         "text": "Their car was bigger and therefore more comfortable.",
         "start": 7,
@@ -65,7 +65,7 @@
         "result": true
     },
     {
-        "hook_name": "preceeded_by_dep",
+        "hook_name": "preceded_by_dep",
         "args": "cc",
         "text": "Their car was bigger and therefore more comfortable.",
         "start": 7,
