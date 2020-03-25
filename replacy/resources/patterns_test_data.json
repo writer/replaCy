@@ -17,12 +17,60 @@
         "result": false
     },
     {
+        "hook_name": "succeeded_by_phrase",
+        "args": ["height", "value", "size", "number"],
+        "text": "He was only five feet nine, the minimum height for a policeman.",
+        "start": 8,
+        "end": 9,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_phrase",
+        "args": ["height", "value", "size", "number"],
+        "text": "Raising the minimum wage would ratchet up real incomes in general.",
+        "start": 2,
+        "end": 3,
+        "result": false
+    },
+    {
+        "hook_name": "succeeded_by_phrase",
+        "args": ["height", "value", "size", "number"],
+        "text": "You must get a minimum of 60 questions right to pass the examination.",
+        "start": 4,
+        "end": 5,
+        "result": false
+    },
+    {
         "hook_name": "succeeded_by_pos",
         "args": "ADV",
         "text": "Their car was bigger and therefore more comfortable.",
         "start": 3,
         "end": 5,
         "result": true
+    },
+    {
+        "hook_name": "succeeded_by_pos",
+        "args": ["PRON","DET"],
+        "text": "You do it.",
+        "start": 1,
+        "end": 2,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_pos",
+        "args": ["PRON","DET"],
+        "text": "She does a dance.",
+        "start": 1,
+        "end": 2,
+        "result": true
+    },
+    {
+        "hook_name": "succeeded_by_pos",
+        "args": ["PRON","DET"],
+        "text": "I do fun things.",
+        "start": 1,
+        "end": 2,
+        "result": false
     },
     {
         "hook_name": "succeeded_by_pos",
@@ -70,6 +118,30 @@
         "text": "Their car was bigger and therefore more comfortable.",
         "start": 7,
         "end": 8,
+        "result": false
+    },
+    {
+        "hook_name": "preceded_by_dep",
+        "args": ["ROOT", "mark"],
+        "text": "If Sam wants to party; let him",
+        "start": 1,
+        "end": 2,
+        "result": true
+    },
+    {
+        "hook_name": "preceded_by_dep",
+        "args": ["ROOT", "mark"],
+        "text": "My name is Sam.",
+        "start": 3,
+        "end": 4,
+        "result": true
+    },
+    {
+        "hook_name": "preceded_by_dep",
+        "args": ["ROOT", "mark"],
+        "text": "That's called a 'beer', Sam.",
+        "start": 8,
+        "end": 9,
         "result": false
     },
     {
@@ -183,5 +255,37 @@
         "start": 2,
         "end": 3,
         "result": false
+    },
+    {
+        "hook_name": "relative_x_is_y",
+        "args": ["children", "dep", "csubj"],
+        "text": "Your condition is serious and requires surgery.",
+        "start": 5,
+        "end": 6,
+        "result": false
+    },
+    {
+        "hook_name": "relative_x_is_y",
+        "args": ["children", "dep", "csubj"],
+        "text": "I require stimulants to function.",
+        "start": 1,
+        "end": 2,
+        "result": false
+    },
+    {
+        "hook_name": "relative_x_is_y",
+        "args": ["children", "dep", "csubj"],
+        "text": "Deciphering the code requires an expert.",
+        "start": 3,
+        "end": 4,
+        "result": true
+    },
+    {
+        "hook_name": "relative_x_is_y",
+        "args": ["children", "dep", "csubj"],
+        "text": "Making small models requires manual skill.",
+        "start": 3,
+        "end": 4,
+        "result": true
     }
 ]
