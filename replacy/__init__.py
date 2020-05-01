@@ -7,8 +7,7 @@ from jsonschema import validate
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
-import replacy.custom_patterns as custom_patterns
-from replacy.custom_patterns import neg
+from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema
 from replacy.inflector import Inflector
 from replacy.version import __version__
@@ -56,7 +55,7 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
     ):
-        self.replacy_patterns = custom_patterns
+        self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
         self.nlp = nlp
         self.match_dict = match_dict if match_dict else get_match_dict()
@@ -109,7 +108,7 @@ class ReplaceMatcher:
         for hook in match_hooks:
             # template - ex. succeeded_by_phrase
             try:
-                template = getattr(self.replacy_patterns, hook["name"])
+                template = getattr(self.default_match_hooks, hook["name"])
             except AttributeError:
                 # if the hook isn't in custom_match_hooks, this will still
                 # raise an exception. I think that is the correct behavior
@@ -130,7 +129,7 @@ class ReplaceMatcher:
             # see cb in get_callback
             if bool(hook.get("match_if_predicate_is", False)):
                 # neg flips the boolean value of a predicate
-                pred = neg(pred)
+                pred = default_match_hooks.neg(pred)
             predicates.append(pred)
         return predicates
 

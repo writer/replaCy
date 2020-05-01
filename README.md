@@ -93,11 +93,11 @@ Here is a minimal `match_dict.json`:
     Span.set_extension("coolness", default=9000)
   ```
 
-Between match hooks and custom properties, replaCy is incredibly powerful, and allows you to control your NLP application's behavior from a single JSON file.
+Between match hooks and custom span attributes, replaCy is incredibly powerful, and allows you to control your NLP application's behavior from a single JSON file.
 
 ### Match hooks
 
-Match hooks are powerful and somewhat confusing. replaCy provides a starting kit of hooks, but since they are just Python functions, you can supply your own. To see all the built in hooks, see [custom_patterns.py](https://github.com/Qordobacode/replaCy/blob/master/replacy/custom_patterns.py). An example is `preceded_by_pos`, which is copied here in full. Notice the signature of the function; if this interests you, see the next subsection, "Hooks Return Predicates".
+Match hooks are powerful and somewhat confusing. replaCy provides a starting kit of hooks, but since they are just Python functions, you can supply your own. To see all the built in hooks, see [default_match_hooks.py](https://github.com/Qordobacode/replaCy/blob/master/replacy/default_match_hooks.py). An example is `preceded_by_pos`, which is copied here in full. Notice the signature of the function; if this interests you, see the next subsection, "Hooks Return Predicates".
 
 ```python
 SpacyMatchPredicate = Callable[[Doc, int, int], bool]
