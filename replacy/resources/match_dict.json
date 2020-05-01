@@ -23,7 +23,7 @@
         ],
         "test": {
             "positive": [
-                "And at the same time extract revenge on the whites he so despises?",
+                "And at the same time extract revenge on those he so despises?",
                 "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
             ],
             "negative": [
@@ -57,7 +57,9 @@
                 "Viewers will have to make due with tired re-runs and second-rate movies."
             ],
             "negative": [
-                "The empty vessels make the greatest sound."
+                "The empty vessels make the greatest sound.",
+                "I'll make do.",
+                "She only has sons; she'll make dudes."
             ]
         },
         "comment": "this is an example comment",

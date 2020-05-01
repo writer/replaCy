@@ -65,7 +65,7 @@ Here is a minimal `match_dict.json`:
         ],
         "test": {
             "positive": [
-                "And at the same time extract revenge on the whites he so despises?",
+                "And at the same time extract revenge on those he so despises?",
                 "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
             ],
             "negative": [
