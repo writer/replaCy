@@ -191,7 +191,7 @@ This allows us to put in our `match_dict.json` a hook that effectively says "onl
 
 #### Hooks Return Predicates
 
-To be a match hook, a Python function must take 1 or 0 arguments, and return a predicate (function which returns a boolean) with inputs `(doc, start, end)`. If you read about the spaCy Matcher, you will understand why the arguments are `doc, start, end`. The reason match hooks RETURN a predicate, rather than BEING a predicate is for flexibility.
+To be a match hook, a Python function must take 1 or 0 arguments, and return a predicate (function which returns a boolean) with inputs `(doc, start, end)`. If you read about the spaCy Matcher, you will understand why the arguments are `doc, start, end`. The reason match hooks RETURN a predicate, rather than BEING a predicate is for flexibility. It allows us to have `preceded_by_pos` instead of `preceded_by_noun`, `preceded_by_adj`, etc.
 
 The structure of a match hook is:
 
@@ -207,6 +207,7 @@ To use your own match hooks, instantiate the replace matcher with a module conta
     import spacy
 
     # import the module with your hooks
+    # the name doesn't matter, it just needs to be a python module
     import my.custom_hooks as ch
 
 
