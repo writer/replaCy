@@ -84,7 +84,14 @@ Here is a minimal `match_dict.json`:
   * `match_hook` - (despite the singular name) A list of "match hooks". These are Python functions which refine matches. See the following section.
   * `test` - has `positive` and `negative` keys. `positive` is a list of strings which this rule SHOULD match against, `negative` is a list of strings which SHOULD NOT match. Used for testing now, but we have plans to infer rules from this section.
   * (optional) `comment` - a string for other humans to read; ignored by replaCy
-  * (optional) `anything` - you can add any extra structure here, and replaCy will attempt to tag matching spans with this information using the spaCy custom namespace `span._`. For example, you can add the key `oogly` with value `"boogly"` for the match `"LOWER": "secret password"`. Then if you call `span = rmatcher("This is the secret password.")[0]`, then `span._.oogly == "boogly"`.
+  * (optional) `anything` - you can add any extra structure here, and replaCy will attempt to tag matching spans with this information using the spaCy custom extension attributes namespace `span._` ([spaCy docs](https://spacy.io/usage/processing-pipelines#custom-components-attributes)). For example, you can add the key `oogly` with value `"boogly"` for the match `"LOWER": "secret password"`. Then if you call `span = rmatcher("This is the secret password.")[0]`, then `span._.oogly == "boogly"`.
+  replaCy tries to be cool about default values with user-defined extensions. If you have a match with the key-value pair `"coolnes": 10`, replaCy will infer that `coolness` is an `int`. When it adds `coolness` to all spaCy spans, it will make it so `span._.coolness` defaults to `0`. This way, you can check all spans for `if span._.coolness > THRESHOLD` and not cause an `AttributeError`. You can change this the way you would change any spaCy custom attribute, e.g.
+
+  ```python
+    from spacy.tokens import Span
+
+    Span.set_extension("coolness", default=9000)
+  ```
 
 Between match hooks and custom properties, replaCy is incredibly powerful, and allows you to control your NLP application's behavior from a single JSON file.
 
