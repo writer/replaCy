@@ -246,7 +246,7 @@ You might want to project nonstandard signs into whitespaces before processing,
 
 but getting rid of multiple spaces is not always possible (this would change span char ranges).
 Since extra spaces are grouped as one token with propery `IS_SPACE: True`, 
-patterns in `match_dict` should add extra whitespace tokens:
+patterns in `match_dict` should have extra whitespace tokens:
 
 ex. 
 
