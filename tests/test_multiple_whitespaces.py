@@ -2,7 +2,6 @@ import pytest
 import spacy
 from replacy import ReplaceMatcher
 from replacy.db import get_match_dict
-from functional import seq
 
 nlp = spacy.load("en_core_web_sm")
 
