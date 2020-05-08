@@ -214,7 +214,7 @@ class ReplaceMatcher:
             they may appear after normalizing nonstandard whitespaces
             ex. Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
             pattern can be preceded and followed by whitespace tokens
-            to keep preceded_by... with and suceeded_by... with match hooks working
+            to keep preceded_by... with and succeeded_by... with match hooks working
             """
             if self.allow_multiple_whitespaces:
 
