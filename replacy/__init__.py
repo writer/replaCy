@@ -218,7 +218,7 @@ class ReplaceMatcher:
             """
             if self.allow_multiple_whitespaces:
 
-                white_pattern = {"IS_SPACE": True, "OP": "*"}
+                white_pattern = {"IS_SPACE": True, "OP": "?"}
 
                 normalized_patterns = [white_pattern]
                 for p in patterns:
