@@ -264,7 +264,7 @@ ex.
             ]
 ```
 To keep `preceded_by...` and `succeeded_by...` match hooks working, add whitespace tokens before and after each pattern.
-In order to add optional whitespace tokens to all patterns in your  `match_dict`, use:
+In order to automatically add whitespace tokens to all patterns in your  `match_dict`, use:
 
 `r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True)`
 
