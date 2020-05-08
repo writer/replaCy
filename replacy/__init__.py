@@ -54,12 +54,14 @@ class ReplaceMatcher:
         match_dict=None,
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
+        allow_multiple_whitespaces=False,
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
         self.nlp = nlp
         self.match_dict = match_dict if match_dict else get_match_dict()
         self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
+        self.allow_multiple_whitespaces  = allow_multiple_whitespaces
 
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
@@ -207,6 +209,22 @@ class ReplaceMatcher:
         for match_name, ps in self.match_dict.items():
             patterns = copy.deepcopy(ps["patterns"])
 
+            """
+            allow matching tokens separated by multiple whitespaces
+            they may appear after normalizing nonstandard whitespaces
+            ex. Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
+            pattern can be preceded and followed by whitespace tokens
+            to keep preceded_by... with and suceeded_by... with match hooks working
+            """
+            if self.allow_multiple_whitespaces:
+                
+                white_pattern = {'IS_SPACE': True, "OP": "*"}
+                
+                normalized_patterns = [white_pattern]
+                for p in patterns:
+                    normalized_patterns+=[p, white_pattern]
+                patterns = normalized_patterns
+            
             # remove custom attributes not supported by spaCy Matcher
             for p in patterns:
                 if "TEMPLATE_ID" in p:
