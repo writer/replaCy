@@ -212,7 +212,7 @@ class ReplaceMatcher:
             """
             allow matching tokens separated by multiple whitespaces
             they may appear after normalizing nonstandard whitespaces
-            ex. Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
+            ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
             pattern can be preceded and followed by whitespace tokens
             to keep preceded_by... with and succeeded_by... with match hooks working
             """
