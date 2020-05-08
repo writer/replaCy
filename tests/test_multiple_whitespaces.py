@@ -9,42 +9,29 @@ nlp = spacy.load("en_core_web_sm")
 # minimal match dict with many whitespaces
 match_dict = {
     "extract-revenge": {
-        "patterns": [
-            {
-                "LEMMA": "extract",
-                "TEMPLATE_ID": 1
-            }
-        ],
-        "suggestions": [
-            [
-                {
-                    "TEXT": "exact",
-                    "FROM_TEMPLATE_ID": 1
-                }
-            ]
-        ],
+        "patterns": [{"LEMMA": "extract", "TEMPLATE_ID": 1}],
+        "suggestions": [[{"TEXT": "exact", "FROM_TEMPLATE_ID": 1}]],
         "match_hook": [
             {
                 "name": "succeeded_by_phrase",
                 "args": "revenge",
-                "match_if_predicate_is": True
+                "match_if_predicate_is": True,
             }
         ],
         "test": {
             "positive": [
-                "And at the same time extract revenge on those he so despises?", # 0
-                "Watch as Tampa Bay extracts  revenge against his former Los Angeles Rams team.", # 1
-                "In fact, the farmer was so mean to this young man he determined to extract   revenge.", # 2
-                "And at the same time extract          revenge on the whites he so despises?", # 10 sic
+                "And at the same time extract revenge on those he so despises?",  # 0
+                "Watch as Tampa Bay extracts  revenge against his former Los Angeles Rams team.",  # 1
+                "In fact, the farmer was so mean to this young man he determined to extract   revenge.",  # 2
+                "And at the same time extract          revenge on the whites he so despises?",  # 10 sic
             ],
-            "negative": [
-                "Mother flavours her custards with lemon extract."
-            ]
-        }
+            "negative": ["Mother flavours her custards with lemon extract."],
+        },
     }
 }
 
 r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True)
+
 
 def test_multiple_whites():
     sents = match_dict["extract-revenge"]["test"]["positive"]
