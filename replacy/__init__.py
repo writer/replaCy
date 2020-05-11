@@ -234,12 +234,15 @@ class ReplaceMatcher:
             callback = self.get_callback(match_name, match_hooks)
             self.matcher.add(match_name, callback, patterns)
 
-    def __call__(self, sent: str):
+    def __call__(self, sent):
         # self.spans must be cleared - global
         self.spans = []
-        sent_doc = self.nlp(sent)
+        try:
+            sent.text
+        except AttributeError:
+            sent = self.nlp(sent)
 
         # this fills up self.spans
-        matches = self.matcher(sent_doc)
+        matches = self.matcher(sent)
 
         return self.spans
