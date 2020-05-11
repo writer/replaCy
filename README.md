@@ -35,6 +35,18 @@ span._.suggestions
 # >>> ['exacts']
 ```
 
+## Input
+
+ReplaceMatcher accepts both text and spaCy doc.
+```python
+# text is ok
+span = r_matcher("She extracts reverge.")[0]
+
+# doc is ok too
+but also:
+doc = nlp("She extracts reverge.")
+span = r_matcher(doc)[0]
+```
 ## match_dict.json format
 
 Here is a minimal `match_dict.json`:
