@@ -35,6 +35,18 @@ span._.suggestions
 # >>> ['exacts']
 ```
 
+## Input
+
+ReplaceMatcher accepts both text and spaCy doc.
+```python
+# text is ok
+span = r_matcher("She extracts reverge.")[0]
+
+# doc is ok too
+but also:
+doc = nlp("She extracts reverge.")
+span = r_matcher(doc)[0]
+```
 ## match_dict.json format
 
 Here is a minimal `match_dict.json`:
@@ -229,3 +241,43 @@ from replacy.db import load_json
 match_dict = load_json('/path/to/your/match/dict')
 ReplaceMatcher.validate_match_dict(match_dict)
 ```
+
+## Multiple spaces support
+
+Sometimes text input includes unwated signs, such as:
+- non printable unicode signs (see: https://www.soscisurvey.de/tools/view-chars.php)
+- non standard whitespaces (see: https://en.wikipedia.org/wiki/Whitespace_character)
+
+ex. `"Here␣is␣a\u180E\u200Bproblem."`
+
+For SpaCy, only most common ascii whitespace `\u0020` is translated as a whitespace spearator.
+
+You might want to project nonstandard signs into whitespaces before processing,
+
+`"Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."`
+
+but getting rid of multiple spaces is not always possible (this would change span char ranges).
+Since extra spaces are grouped as one token with propery `IS_SPACE: True`, 
+patterns in `match_dict` should have extra whitespace tokens:
+
+ex. 
+
+```
+"patterns": [
+                {
+                    "LOWER": "a"
+                },
+                {
+                    "IS_SPACE": True, "OP": "?"
+                },
+                {
+                    "LOWER": "problem"
+                }
+            ]
+```
+To keep `preceded_by...` and `succeeded_by...` match hooks working, add whitespace tokens before and after each pattern.
+In order to automatically add whitespace tokens to all patterns in your  `match_dict`, use:
+
+`r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True)`
+
+By default `allow_multiple_whitespaces` is set to `False`.
