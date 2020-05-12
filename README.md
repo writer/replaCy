@@ -43,7 +43,6 @@ ReplaceMatcher accepts both text and spaCy doc.
 span = r_matcher("She extracts reverge.")[0]
 
 # doc is ok too
-but also:
 doc = nlp("She extracts reverge.")
 span = r_matcher(doc)[0]
 ```
