@@ -1,10 +1,16 @@
-import pyinflect
 import spacy
 from replacy.db import get_forms_lookup
 
 class Inflector:
-    def __init__(self, nlp=None, forms_lookup=None):
+    def __init__(self, nlp=None, forms_lookup=None, lemmatizer="pyInflect"):
         
+        if lemmatizer=="pyInflect":
+            import pyinflect
+        elif lemmatizer=="lemmInflect":
+            import lemminflect
+        else:
+            raise NotImplementedError
+
         self.nlp = nlp
         if not self.nlp:
             self.nlp = spacy.load("en_core_web_sm")

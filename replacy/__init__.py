@@ -55,6 +55,7 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
         allow_multiple_whitespaces=False,
+        lemmatizer="pyInflect"
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -66,7 +67,7 @@ class ReplaceMatcher:
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
         self.spans: List[Span] = []
-        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
+        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup, lemmatizer=lemmatizer)
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
