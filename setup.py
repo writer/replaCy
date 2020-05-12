@@ -34,7 +34,7 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=["pyfunctional>=1.2.0", "pyinflect==0.5.0", "jsonschema>=3.2.0"],
+    install_requires=["pyfunctional>=1.2.0", "pyinflect==0.5.0", "jsonschema>=3.2.0", "lemminflect==0.2.1"],
     python_requires=">=3.5",
     classifiers=[
         "Development Status :: 3 - Alpha",
