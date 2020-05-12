@@ -46,6 +46,21 @@ span = r_matcher("She extracts reverge.")[0]
 doc = nlp("She extracts reverge.")
 span = r_matcher(doc)[0]
 ```
+
+## Inflection library
+
+ReplaCy uses inflection module underhood. Currently supported inflection libraries: 
+- [pyInflect](https://github.com/bjascob/pyinflect) - default
+- [LemmInflect](https://github.com/bjascob/LemmInflect) - slower, more accurate
+
+```python
+# default initialization will load pyInflect
+r_matcher = ReplaceMatcher(nlp)
+
+# to use LemmInflect
+r_matcher = ReplaceMatcher(nlp, lemmatizer="lemmInflect")
+```
+
 ## match_dict.json format
 
 Here is a minimal `match_dict.json`:
