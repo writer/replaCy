@@ -287,5 +287,77 @@
         "start": 3,
         "end": 4,
         "result": true
+    },
+    {
+        "hook_name": "part_of_phrase",
+        "args": "hungry for apples",
+        "text": "he seems really hungry for apples today",
+        "start": 5,
+        "end": 6,
+        "result": true
+    },
+    {
+        "hook_name": "part_of_phrase",
+        "args": "hungry for apples",
+        "text": "he seems really hungry for some apples today",
+        "start": 6,
+        "end": 7,
+        "result": false
+    },
+    {
+        "hook_name": "part_of_phrase",
+        "args": "hungry for apples today",
+        "text": "he seems really hungry for apples today",
+        "start": 5,
+        "end": 6,
+        "result": true
+    },
+    {
+        "hook_name": "part_of_phrase",
+        "args": "hungry for apples today apples",
+        "text": "he seems really hungry for apples today apples",
+        "start": 5,
+        "end": 6,
+        "result": true
+    },
+    {
+        "hook_name": "part_of_phrase",
+        "args": "hungry for apples today apples",
+        "text": "he seems really hungry for apples today apples",
+        "start": 7,
+        "end": 8,
+        "result": true
+    },
+    {
+        "hook_name": "sentence_has",
+        "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+        "text": "I turned myself into a pickle. I'm pickle rick!",
+        "start": 1,
+        "end": 2,
+        "result": false
+    },
+    {
+        "hook_name": "sentence_has",
+        "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+        "text": "I turned myself into a pickle. I'm pickle rick!",
+        "start": 7,
+        "end": 8,
+        "result": true
+    },
+    {
+        "hook_name": "sentence_has",
+        "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+        "text": "I turned myself into a pickle. I'm pickle rick!",
+        "start": 8,
+        "end": 9,
+        "result": true
+    },
+    {
+        "hook_name": "sentence_has",
+        "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+        "text": "Wubba lubba dub dub means I am in great pain, please help me",
+        "start": 6,
+        "end": 7,
+        "result": true
     }
 ]
