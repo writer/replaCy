@@ -217,18 +217,16 @@ def sentence_has(phrase) -> SpacyMatchPredicate:
 def part_of_phrase(phrase) -> SpacyMatchPredicate:
     def _part_of_phrase(doc, start, end):
         matched = doc[start:end].text.lower()
-        parts = [x[:-1] if x.endswith(" ") else x[1:] if x.startswith(" ") else x for x in phrase.split(matched)]
+        parts = phrase.split(matched)
         for i in range(len(parts)-1):
             firstpart = ""
             secondpart = ""
             for part in parts[:i-1]:
-                firstpart += part + " "
+                firstpart += part
             for part in parts[i+1:]:
-                secondpart += part + " "
-            firstpart = firstpart[:-1]
-            secondpart = secondpart[:-1]
-            preceeds = doc[:start].text.lower().endswith(firstpart)
-            follows = doc[end:].text.lower().startswith(secondpart)
+                secondpart += part
+            preceeds = doc.text.lower()[:doc[start:end].start_char].endswith(firstpart)
+            follows = doc.text.lower()[doc[start:end].end_char:].startswith(secondpart)
             if preceeds and follows:
                 return True
         return False
