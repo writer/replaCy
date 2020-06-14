@@ -22,7 +22,9 @@ for ext in known_string_extensions:
     Span.set_extension(ext, default="", force=True)
 
 expected_properties = (
-    ["patterns", "match_hook", "test"] + known_list_extensions + known_string_extensions
+    ["patterns", "match_hook", "test"]
+    + known_list_extensions
+    + known_string_extensions
 )
 
 
@@ -55,7 +57,7 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
         allow_multiple_whitespaces=False,
-        lemmatizer="pyInflect"
+        lemmatizer="pyInflect",
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -67,7 +69,9 @@ class ReplaceMatcher:
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
         self.spans: List[Span] = []
-        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup, lemmatizer=lemmatizer)
+        self.inflector = Inflector(
+            nlp=self.nlp, forms_lookup=self.forms_lookup, lemmatizer=lemmatizer
+        )
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -79,7 +83,10 @@ class ReplaceMatcher:
         novel_prop_defaults: Dict[str, Any] = {}
         for x in self.match_dict.values():
             for k, v in x.items():
-                if k in novel_properites and k not in novel_prop_defaults.keys():
+                if (
+                    k in novel_properites
+                    and k not in novel_prop_defaults.keys()
+                ):
                     if isinstance(v, str):
                         novel_prop_defaults[k] = ""
                     elif isinstance(v, list):
@@ -136,8 +143,9 @@ class ReplaceMatcher:
             predicates.append(pred)
         return predicates
 
-    def inflect_suggestion(self, pre_suggestion, doc, start, end, match_name):
+    def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
         """
+        Perform inflection and replace references to the matched token
         example of pattern and pre_suggestion
         pattern: "LEMMA": "chock", "TEMPLATE_ID": 1
         pre_suggestion: "TEXT": "chalk", "FROM_TEMPLATE_ID": 1
@@ -145,19 +153,38 @@ class ReplaceMatcher:
         """
         text_list = []
         for item in pre_suggestion:
-            text = item["TEXT"]
+            try:
+                text = item["TEXT"]
+            except KeyError:
+                ref = int(item["PATTERN_REF"])
+                refd_token = doc[start + ref]
             changed_text = None
 
             # check if inflect
             if "FROM_TEMPLATE_ID" in item:
                 template_id = item["FROM_TEMPLATE_ID"]
                 index = None
-                for i, token in enumerate(self.match_dict[match_name]["patterns"]):
-                    if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
+                for i, token in enumerate(
+                    self.match_dict[match_name]["patterns"]
+                ):
+                    if (
+                        "TEMPLATE_ID" in token
+                        and token["TEMPLATE_ID"] == template_id
+                    ):
                         index = i
                         break
                 if index is not None:
-                    changed_text = self.inflector.inflect(doc, text, start + index)
+                    changed_text = self.inflector.auto_inflect(
+                        doc, text, start + index
+                    )
+            elif "PATTERN_REF" in item:
+                if "INFLECTION" in item:
+                    form = item["INFLECTION"]
+                    changed_text = self.inflector.inflect_or_lookup(
+                        refd_token, form
+                    )
+                else:
+                    changed_text = refd_token.text
             if changed_text:
                 text_list.append(changed_text)
             elif len(text):
@@ -189,12 +216,14 @@ class ReplaceMatcher:
 
             pre_suggestions = self.match_dict[match_name]["suggestions"]
 
-            span._.suggestions = (
-                seq(pre_suggestions)
-                .map(lambda x: self.inflect_suggestion(x, doc, start, end, match_name))
-                .list()
+            span._.suggestions = [
+                self.process_suggestions(x, doc, start, end, match_name)
+                for x in pre_suggestions
+            ]
+
+            span._.description = self.match_dict[match_name].get(
+                "description", ""
             )
-            span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
