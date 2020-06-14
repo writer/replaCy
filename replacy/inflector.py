@@ -1,12 +1,13 @@
 import spacy
 from replacy.db import get_forms_lookup
 
+
 class Inflector:
     def __init__(self, nlp=None, forms_lookup=None, lemmatizer="pyInflect"):
-        
-        if lemmatizer=="pyInflect":
+
+        if lemmatizer == "pyInflect":
             import pyinflect
-        elif lemmatizer=="lemmInflect":
+        elif lemmatizer == "lemmInflect":
             import lemminflect
         else:
             raise NotImplementedError
@@ -28,7 +29,7 @@ class Inflector:
                 return self.forms_lookup[k][verb_form]
         return None
 
-    def inflect(self, doc, suggestion, index):
+    def auto_inflect(self, doc, suggestion, index):
         """
         Inflect the suggestion using token at position 'index' as template.
         ex. (washed, eat) => ate
@@ -55,11 +56,16 @@ class Inflector:
         changed_doc = self.nlp(changed_sentence)
         changed_token = changed_doc[index]
 
-        inflected_token = changed_token._.inflect(token.tag_)
+        return self.inflect_or_lookup(changed_token, token.tag_)
+
+    def inflect_or_lookup(
+        self, token: spacy.tokens.token.Token, form: str
+    ) -> str:
+        inflected_token = token._.inflect(form)
 
         # dictionary check
         if not inflected_token:
-            inflected_token = self.get_dict_form(suggestion, token.tag_)
+            inflected_token = self.get_dict_form(token.text, form)
 
         return inflected_token
 
@@ -76,12 +82,16 @@ class Inflector:
         except AttributeError:
             doc = self.nlp(doc)
 
-        infl_token = self.inflect(doc, suggestion, index)
+        infl_token = self.auto_inflect(doc, suggestion, index)
 
         if infl_token:
             token = doc[index]
             changed_sent = "".join(
-                [doc.text[: token.idx], infl_token, doc.text[token.idx + len(token) :]]
+                [
+                    doc.text[: token.idx],
+                    infl_token,
+                    doc.text[token.idx + len(token) :],
+                ]
             )
             return changed_sent
         else:
