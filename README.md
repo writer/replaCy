@@ -245,7 +245,25 @@ To use your own match hooks, instantiate the replace matcher with a module conta
     span._.suggestions
     # >>> ['acccepts']
 ```
+#### Context-matching match hooks
 
+The default match hooks also include the match hooks part_of_phrase and sentence_has. The match hook part_of_phrase checks if the matched phrase is part of the given input phrase to the hook, and sentence_has checks whether or not the sentence including the matched phrase contains the word or words given as input. For example, if you wanted to match the word `apple` unless it was a rick and morty reference you could use the following match hooks:
+
+```        
+    "match_hook": [
+            {
+                "name": "part_of_phrase",
+                "args": "hungry for apples",
+                "match_if_predicate_is": false
+            },
+            {
+                "name": "sentence_has",
+                "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+                "match_if_predicate_is": false
+            }
+        ]
+        
+```
 ## Testing match_dict (JSON schema validation)
 
 ```python
