@@ -245,20 +245,20 @@ To use your own match hooks, instantiate the replace matcher with a module conta
     span._.suggestions
     # >>> ['acccepts']
 ```
-#### Context-matching match hooks
+#### Context matching
 
-The default match hooks also include the match hooks part_of_phrase and sentence_has. The match hook part_of_phrase checks if the matched phrase is part of the given input phrase to the hook, and sentence_has checks whether or not the sentence including the matched phrase contains the word or words given as input. For example, if you wanted to match the word `apple` unless it was a rick and morty reference you could use the following match hooks:
+Currently replaCy only supports string-based context using match hooks. The way to do this is by using the match hooks part_of_phrase and sentence_has. The match hook part_of_phrase checks if the matched phrase is part of the given input phrase to the hook, and sentence_has checks whether or not the sentence including the matched phrase contains the word or words given as input. For example, if you wanted to replace the word "make" with the word "brew" when appropriate, such as "The coffee was made" -> "the coffee was brewed" you could use the following match hooks. This wouldn't be perfect for all applications, such as when the sentence contains multiple instances of the word "made", such as "he made coffee and also made cookies", but works for most applications.
 
 ```        
     "match_hook": [
             {
                 "name": "part_of_phrase",
-                "args": "hungry for apples",
+                "args": "makes coffee",
                 "match_if_predicate_is": false
             },
             {
                 "name": "sentence_has",
-                "args": ["rick", "morty", "jerry", "wubba lubba dub dub"],
+                "args": ["tea", "coffee", "beer"],
                 "match_if_predicate_is": false
             }
         ]
