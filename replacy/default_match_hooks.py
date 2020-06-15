@@ -71,7 +71,7 @@ def succeeded_by_pos(pos) -> SpacyMatchPredicate:
 def preceded_by_pos(pos) -> SpacyMatchPredicate:
     if isinstance(pos, list):
         pos_list = pos
-    
+
         def _preceded_by_pos(doc, start, end):
             bools = [doc[start - 1].pos_ == p for p in pos_list]
             return any(bools)
@@ -183,6 +183,54 @@ def relative_x_is_y(arglist) -> SpacyMatchPredicate:
         return False
 
     return _relatives_x_is_y
+
+def sentence_has(phrase) -> SpacyMatchPredicate:
+    if isinstance(phrase, list):
+        phrase_list = phrase
+        def _sentence_has(doc, start, end):
+            sents = list(doc.sents)
+            totalnum = 0
+            sentnum = 0
+            for sent in sents:
+                totalnum += len(sent)
+                if start > totalnum-1:
+                    sentnum += 1
+            bools = [p in sents[sentnum].text.lower() for p in phrase_list]
+            return any(bools)
+        return _sentence_has
+    elif isinstance(phrase, str):
+        def _sentence_has(doc, start, end):
+            sents = list(doc.sents)
+            totalnum = 0
+            sentnum = 0
+            for sent in sents:
+                totalnum += len(sent)
+                if start > totalnum-1:
+                    sentnum += 1
+            return phrase in sents[sentnum].text.lower()
+        return _sentence_has
+    else:
+        raise ValueError(
+            "args of sentence_has should be a string or list of strings"
+        )
+
+def part_of_phrase(phrase) -> SpacyMatchPredicate:
+    def _part_of_phrase(doc, start, end):
+        matched = doc[start:end].text.lower()
+        parts = phrase.split(matched)
+        for i in range(len(parts)-1):
+            firstpart = ""
+            secondpart = ""
+            for part in parts[:i-1]:
+                firstpart += part
+            for part in parts[i+1:]:
+                secondpart += part
+            preceeds = doc.text.lower()[:doc[start:end].start_char].endswith(firstpart)
+            follows = doc.text.lower()[doc[start:end].end_char:].startswith(secondpart)
+            if preceeds and follows:
+                return True
+        return False
+    return _part_of_phrase
 
 
 def succeeded_by_num() -> SpacyMatchPredicate:
