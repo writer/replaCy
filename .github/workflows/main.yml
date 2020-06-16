@@ -15,8 +15,7 @@ jobs:
     - name: Run build script
       run: >-
         bash build_release.sh
-    - name: Publish distribution 📦 to Test PyPI
+    - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.test_pypi_secret }}
-        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.pypi_password }}
