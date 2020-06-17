@@ -22,9 +22,7 @@ for ext in known_string_extensions:
     Span.set_extension(ext, default="", force=True)
 
 expected_properties = (
-    ["patterns", "match_hook", "test"]
-    + known_list_extensions
-    + known_string_extensions
+    ["patterns", "match_hook", "test"] + known_list_extensions + known_string_extensions
 )
 
 
@@ -83,10 +81,7 @@ class ReplaceMatcher:
         novel_prop_defaults: Dict[str, Any] = {}
         for x in self.match_dict.values():
             for k, v in x.items():
-                if (
-                    k in novel_properites
-                    and k not in novel_prop_defaults.keys()
-                ):
+                if k in novel_properites and k not in novel_prop_defaults.keys():
                     if isinstance(v, str):
                         novel_prop_defaults[k] = ""
                     elif isinstance(v, list):
@@ -127,12 +122,20 @@ class ReplaceMatcher:
             # predicate - filled template ex. succeeded_by_word("to")
             # will match "in addition to..." but not "in addition, ..."
             args = hook.get("args", None)
-            if args is not None:
-                # the match_hook needs arguments
-                pred = template(hook["args"])
+            kwargs = hook.get("kwargs", None)
+            if args is None:
+                print(kwargs)
+                if kwargs is None:
+                    # the match_hook is nullary
+                    pred = template()
+                else:
+                    pred = template(**kwargs)
+            elif type(args) == dict:
+                # should we force them to use kwargs?
+                pred = template(**args)
             else:
-                # the match_hook is nullary
-                pred = template()
+                # oops, bad design, we assume non-dicts are called directly
+                pred = template(args)
 
             # to confuse people for centuries to come ...
             # negate, since positive breaks matching
@@ -164,25 +167,16 @@ class ReplaceMatcher:
             if "FROM_TEMPLATE_ID" in item:
                 template_id = item["FROM_TEMPLATE_ID"]
                 index = None
-                for i, token in enumerate(
-                    self.match_dict[match_name]["patterns"]
-                ):
-                    if (
-                        "TEMPLATE_ID" in token
-                        and token["TEMPLATE_ID"] == template_id
-                    ):
+                for i, token in enumerate(self.match_dict[match_name]["patterns"]):
+                    if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
                         index = i
                         break
                 if index is not None:
-                    changed_text = self.inflector.auto_inflect(
-                        doc, text, start + index
-                    )
+                    changed_text = self.inflector.auto_inflect(doc, text, start + index)
             elif "PATTERN_REF" in item:
                 if "INFLECTION" in item:
                     form = item["INFLECTION"]
-                    changed_text = self.inflector.inflect_or_lookup(
-                        refd_token, form
-                    )
+                    changed_text = self.inflector.inflect_or_lookup(refd_token, form)
                 else:
                     changed_text = refd_token.text
             if changed_text:
@@ -221,9 +215,7 @@ class ReplaceMatcher:
                 for x in pre_suggestions
             ]
 
-            span._.description = self.match_dict[match_name].get(
-                "description", ""
-            )
+            span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
