@@ -99,5 +99,48 @@
                 "What is the minimum entrance requirement for this course?"
             ]
         }
+    },
+    "lt-example": {
+        "patterns": [
+            {
+                "LOWER": {
+                    "IN": [
+                        "have",
+                        "has"
+                    ]
+                }
+            },
+            {
+                "TAG": {
+                    "IN": [
+                        "VBD",
+                        "VBP",
+                        "VB"
+                    ]
+                }
+            },
+            {
+                "TAG": {
+                    "NOT_IN": [
+                        "VBG"
+                    ]
+                }
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "PATTERN_REF": 0
+                },
+                {
+                    "PATTERN_REF": 1,
+                    "INFLECTION": "VBN"
+                },
+                {
+                    "PATTERN_REF": 2
+                }
+            ]
+        ],
+        "description": "Possible agreement error -- use past participle here"
     }
 }
