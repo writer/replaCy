@@ -142,5 +142,46 @@
             ]
         ],
         "description": "Possible agreement error -- use past participle here"
+    },
+    "assemble_attach_together": {
+        "patterns": [
+            {
+                "LOWER": "together"
+            }
+        ],
+        "match_hook": [
+            {
+                "name": "relative_x_is_y",
+                "kwargs": {
+                    "children_or_ancestors": "ancestors",
+                    "pos_or_dep": "dep",
+                    "value": "ROOT",
+                    "lemma": [
+                        "assemble",
+                        "attach"
+                    ]
+                },
+                "match_if_predicate_is": true
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": ""
+                }
+            ]
+        ]
+    },
+    "test": {
+        "positive": [
+            "Avengers, assemble the team together!",
+            "We assembled the furniture together.",
+            "We will have attached the pieces together",
+            "Let's attach together the parts."
+        ],
+        "negative": [
+            "After we assemble, we can go together",
+            "My arm is attached to my shoulder, I like that they are together."
+        ]
     }
 }
