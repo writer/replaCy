@@ -124,7 +124,6 @@ class ReplaceMatcher:
             args = hook.get("args", None)
             kwargs = hook.get("kwargs", None)
             if args is None:
-                print(kwargs)
                 if kwargs is None:
                     # the match_hook is nullary
                     pred = template()
