@@ -11,6 +11,9 @@
                 "TEXT": {
                     "$ref": "#/definitions/spacyValue"
                 },
+                "LEMMA": {
+                    "$ref": "#/definitions/spacyValue"
+                },
                 "LOWER": {
                     "$ref": "#/definitions/spacyValue"
                 },
@@ -116,6 +119,12 @@
                 },
                 "FROM_TEMPLATE_ID": {
                     "type": "integer"
+                },
+                "PATTERN_REF": {
+                    "type": "integer"
+                },
+                "INFLECTION": {
+                    "type": "string"
                 }
             }
         },
@@ -124,6 +133,40 @@
             "items": {
                 "$ref": "#/definitions/replacySuggestionItem"
             }
+        },
+        "matchHookItem": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "args": {
+                    "oneOf": [
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "kwargs": {
+                    "type": "object"
+                },
+                "match_if_predicate_is": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "name",
+                "match_if_predicate_is"
+            ]
         }
     },
     "patternProperties": {
@@ -142,6 +185,13 @@
                     "minItems": 0,
                     "items": {
                         "$ref": "#/definitions/replacySuggestion"
+                    }
+                },
+                "match_hook": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/matchHookItem"
                     }
                 },
                 "test": {
