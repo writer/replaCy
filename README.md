@@ -244,11 +244,12 @@ To use your own match hooks, instantiate the replace matcher with a module conta
     span._.suggestions
     # >>> ['acccepts']
 ```
+
 #### Context matching
 
 Currently replaCy only supports string-based context using match hooks. The way to do this is by using the match hooks part_of_phrase and sentence_has. The match hook part_of_phrase checks if the matched phrase is part of the given input phrase to the hook, and sentence_has checks whether or not the sentence including the matched phrase contains the word or words given as input. An example would be if you wanted to suggest that the word "apples" be changed to its scientific name, except when it's a Rick and Morty reference. To do this you could use the following:
 
-```        
+```json
 {
     ...,
     "apples-example": {
@@ -289,8 +290,8 @@ Currently replaCy only supports string-based context using match hooks. The way 
         "comment": "Change apple to its scientific name unless part of a Rick and Morty reference"
     }
 }
-        
 ```
+
 ## Testing match_dict (JSON schema validation)
 
 ```python

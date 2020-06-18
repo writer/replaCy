@@ -14,10 +14,12 @@ def test_custom_patterns(example):
 
     hook_name = example["hook_name"]
 
-    if example["args"]:
+    if example.get("args", False):
         hook = getattr(default_match_hooks, hook_name)(example["args"])
+    elif example.get("kwargs", False):
+        hook = getattr(default_match_hooks, hook_name)(**example["kwargs"])
     else:
-        hook = hook = getattr(default_match_hooks, hook_name)()
+        hook = getattr(default_match_hooks, hook_name)()
 
     doc = nlp(example["text"])
     start = example["start"]
