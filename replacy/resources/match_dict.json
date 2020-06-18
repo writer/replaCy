@@ -152,6 +152,7 @@
         }
     },
     "assemble_attach_together": {
+        "comment": "Match the word together if it is a modifier of any form of assemble or attach, and suggest removing it",
         "patterns": [
             {
                 "LOWER": "together"
