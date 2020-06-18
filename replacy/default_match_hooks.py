@@ -192,6 +192,8 @@ def relative_x_is_y(
                         return rel.lemma_ == lemma
                     elif type(lemma) == list:
                         return any([rel.lemma_ == l for l in lemma])
+            else:
+                return False
 
         if end - start != 1:
             # This only works if a single Token is matched,
