@@ -141,7 +141,15 @@
                 }
             ]
         ],
-        "description": "Possible agreement error -- use past participle here"
+        "description": "Possible agreement error -- use past participle here",
+        "test": {
+            "positive": [
+                "I have eat that"
+            ],
+            "negative": [
+                "I have eaten that"
+            ]
+        }
     },
     "assemble_attach_together": {
         "patterns": [
@@ -170,18 +178,18 @@
                     "TEXT": ""
                 }
             ]
-        ]
-    },
-    "test": {
-        "positive": [
-            "Avengers, assemble the team together!",
-            "We assembled the furniture together.",
-            "We will have attached the pieces together",
-            "Let's attach together the parts."
         ],
-        "negative": [
-            "After we assemble, we can go together",
-            "My arm is attached to my shoulder, I like that they are together."
-        ]
+        "test": {
+            "positive": [
+                "Avengers, assemble the team together!",
+                "We assembled the furniture together.",
+                "We will have attached the pieces together",
+                "Let's attach together the parts."
+            ],
+            "negative": [
+                "After we assemble, we can go together",
+                "My arm is attached to my shoulder, I like that they are together."
+            ]
+        }
     }
 }
