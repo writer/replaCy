@@ -131,7 +131,11 @@ class ReplaceMatcher:
                     pred = template(**kwargs)
             elif type(args) == dict:
                 # should we force them to use kwargs?
-                pred = template(**args)
+                print(
+                    f"WARNING: dict passed as sole args argument. Calling {hook['name']} "
+                    f"with single argument {args}. If you want to call with keyword arguments, use kwargs"
+                )
+                pred = template(args)
             else:
                 # oops, bad design, we assume non-dicts are called directly
                 pred = template(args)
