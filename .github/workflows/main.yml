@@ -1,4 +1,4 @@
-name: Always build, publish to PyPi if on master branch
+name: Always build, also publish to PyPi if on master branch
 
 on: push
 
