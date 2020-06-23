@@ -57,6 +57,7 @@ jobs:
           git commit -am "Bump version to $VERSION"
           git tag $VERSION
       - name: Push version increment
+        if: github.ref == 'refs/heads/master'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
