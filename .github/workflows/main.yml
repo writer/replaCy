@@ -4,7 +4,7 @@ on: push
 
 jobs:
   build:
-    name: Build and test
+    name: Build and test; publish if on master
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -15,12 +15,9 @@ jobs:
       - name: Run build script
         run: >-
           bash build.sh
-  publish:
-    name: Publish 🐍📦 to PyPi
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Publish distribution 📦 to PyPI
+      - name: Publish 🐍📦 to PyPi
+        # Tried this as a separate job, but the artifact doesn't persist
+        if: github.ref == 'refs/heads/master'
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.pypi_password }}
