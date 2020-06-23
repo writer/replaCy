@@ -84,10 +84,9 @@ upload_to_pypi ()
 # Actually run the code #
 #########################
 
-check_credential_file_exists
+#check_credential_file_exists
 update_deps
 run_tests
 bump_version
 create_dist
-upload_to_pypi
-
+#upload_to_pypi
