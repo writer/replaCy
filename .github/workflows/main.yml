@@ -12,12 +12,53 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.7
-      - name: Run build script
-        run: >-
-          bash build.sh
+      - name: Install deps
+        run: |
+          echo "quitely installing dependencies..."
+          python3 -m pip install -q --upgrade twine setuptools wheel
+          python3 -m pip install -qr requirements.txt
+          python3 -m pip install -qr requirements-dev.txt
+      - name: Run tests
+        run: |
+          python3 test.py
+      - name: Bump version
+        if: github.ref == 'refs/heads/master'
+        run: |
+          BASE_STRING=$(cat VERSION)
+          BASE_LIST=($(echo "$BASE_STRING" | tr '.' ' '))
+          V_MAJOR=${BASE_LIST[0]}
+          V_MINOR=${BASE_LIST[1]}
+          V_PATCH=${BASE_LIST[2]}
+          echo -e "Current version: $BASE_STRING"
+          V_MINOR=$((V_MINOR + 1))
+          V_PATCH=0
+          SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
+          echo "Bumping minor version in VERSION file"
+          echo ""
+          echo "$SUGGESTED_VERSION" > VERSION
+          echo "::set-env name=VERSION::$SUGGESTED_VERSION"
+      - name: create source dist
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "generating source distribution - this step bumps version.py to match VERSION"
+          echo ""
+          python3 setup.py sdist
       - name: Publish 🐍📦 to PyPi
         # Tried this as a separate job, but the artifact doesn't persist
         if: github.ref == 'refs/heads/master'
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.pypi_password }}
+      - name: Commit version increment
+        if: github.ref == 'refs/heads/master'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "Bump version to $VERSION"
+          git tag $VERSION
+      - name: Push version increment
+        if: github.ref == 'refs/heads/master'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
