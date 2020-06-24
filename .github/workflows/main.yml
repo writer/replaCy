@@ -58,10 +58,3 @@ jobs:
           git tag $VERSION
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
           git push --follow-tags origin master --force
-      - name: Push version increment
-        if: github.ref == 'refs/heads/master'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: master
-          force: true # dumbest way to get around protected branches
