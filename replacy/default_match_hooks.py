@@ -109,12 +109,12 @@ def preceded_by_lemma(lemma, distance=1) -> SpacyMatchPredicate:
         lemma_list = lemma
 
         def _preceded_by_lemma(doc, start, end):
-            bools = [doc[start - 2].lemma_ == l for l in lemma_list]
+            bools = [doc[start - distance].lemma_ == l for l in lemma_list]
             return any(bools)
 
         return _preceded_by_lemma
     elif isinstance(lemma, str):
-        return lambda doc, start, end: doc[start - 2].lemma_ == lemma
+        return lambda doc, start, end: doc[start - distance].lemma_ == lemma
     else:
         raise ValueError(
             "args of preceded_by_lemma should be a string or list of strings"
