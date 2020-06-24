@@ -87,6 +87,40 @@ def preceded_by_pos(pos) -> SpacyMatchPredicate:
         )
 
 
+def succeeded_by_lemma(lemma) -> SpacyMatchPredicate:
+    if isinstance(lemma, list):
+        lemma_list = lemma
+
+        def _succeeded_by_lemma(doc, start, end):
+            bools = [doc[end].lemma_ == l for l in lemma_list]
+            return any(bools)
+
+        return _succeeded_by_lemma
+    elif isinstance(lemma, str):
+        return lambda doc, start, end: doc[end].lemma_ == lemma
+    else:
+        raise ValueError(
+            "args of succeeded_by_lemma should be a string or list of strings"
+        )
+
+
+def preceded_by_lemma(lemma, distance=1) -> SpacyMatchPredicate:
+    if isinstance(lemma, list):
+        lemma_list = lemma
+
+        def _preceded_by_lemma(doc, start, end):
+            bools = [doc[start - distance].lemma_ == l for l in lemma_list]
+            return any(bools)
+
+        return _preceded_by_lemma
+    elif isinstance(lemma, str):
+        return lambda doc, start, end: doc[start - distance].lemma_ == lemma
+    else:
+        raise ValueError(
+            "args of preceded_by_lemma should be a string or list of strings"
+        )
+
+
 def succeeded_by_dep(dep) -> SpacyMatchPredicate:
     if isinstance(dep, list):
         dep_list = dep

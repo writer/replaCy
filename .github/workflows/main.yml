@@ -30,6 +30,7 @@ jobs:
           V_MINOR=${BASE_LIST[1]}
           V_PATCH=${BASE_LIST[2]}
           echo -e "Current version: $BASE_STRING"
+          echo "::set-env name=OLD_VERSION::$BASE_STRING"
           V_MINOR=$((V_MINOR + 1))
           V_PATCH=0
           SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"

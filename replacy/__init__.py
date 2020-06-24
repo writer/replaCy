@@ -163,7 +163,16 @@ class ReplaceMatcher:
                 text = item["TEXT"]
             except KeyError:
                 ref = int(item["PATTERN_REF"])
-                refd_token = doc[start + ref]
+                if ref >= 0:
+                    refd_token = doc[start + ref]
+                else:
+                    # this is confusing. Example:
+                    # doc = nlp("I like apples, blood oranges, and bananas")
+                    # start = 2, end = 9 gives doc[start:end] == "apples, blood oranges, and bananas"
+                    # but doc[9] != "bananas", it is an IndexError, the last token is end-1
+                    # so, per python conventions, PATTERN_REF = -1 would mean the last matched token
+                    # so we can just add ref and end if ref is negative
+                    refd_token = doc[end + ref]
             changed_text = None
 
             # check if inflect
@@ -182,6 +191,17 @@ class ReplaceMatcher:
                     changed_text = self.inflector.inflect_or_lookup(refd_token, form)
                 else:
                     changed_text = refd_token.text
+
+                # This should probably be a list of ops
+                # and we should have a parser class
+                if "REPLACY_OP" in item:
+                    op = item["REPLACY_OP"]
+                    if op == "LOWER":
+                        changed_text = changed_text.lower()
+                    if op == "TITLE":
+                        changed_text = changed_text.title()
+                    if op == "UPPER":
+                        changed_text = changed_text.upper()
             if changed_text:
                 text_list.append(changed_text)
             elif len(text):
