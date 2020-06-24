@@ -49,13 +49,15 @@ jobs:
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.pypi_password }}
-      - name: Commit version increment
+      - name: Commit and push version increment
         if: github.ref == 'refs/heads/master'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -am "Bump version to $VERSION"
           git tag $VERSION
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+          git push --follow-tags origin master --force
       - name: Push version increment
         if: github.ref == 'refs/heads/master'
         uses: ad-m/github-push-action@master
