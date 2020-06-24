@@ -191,6 +191,17 @@ class ReplaceMatcher:
                     changed_text = self.inflector.inflect_or_lookup(refd_token, form)
                 else:
                     changed_text = refd_token.text
+
+                # This should probably be a list of ops
+                # and we should have a parser class
+                if "REPLACY_OP" in item:
+                    op = item["REPLACY_OP"]
+                    if op == "LOWER":
+                        changed_text = changed_text.lower()
+                    if op == "TITLE":
+                        changed_text = changed_text.title()
+                    if op == "UPPER":
+                        changed_text = changed_text.upper()
             if changed_text:
                 text_list.append(changed_text)
             elif len(text):
