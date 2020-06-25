@@ -2,6 +2,8 @@ import json
 import os
 from typing import Any, Dict, List, Union
 
+import kenlm
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -65,3 +67,11 @@ def get_match_dict_schema(schema_path="resources/match_dict_schema.json"):
 def get_patterns_test_data(data_path="resources/patterns_test_data.json"):
     test_data_path = os.path.join(here, data_path)
     return load_json(test_data_path)
+
+
+def get_default_lm(testing=False):
+    if testing:
+        model_path = "replacy/resources/test.arpa"
+    else:
+        model_path = "resources/cor_batches_1-12_lower_4grams.bin"
+    return kenlm.Model(model_path)

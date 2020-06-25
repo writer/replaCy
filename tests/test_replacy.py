@@ -18,7 +18,7 @@ xfail = pytest.mark.xfail
 nlp = spacy.load("en_core_web_sm")
 
 match_dict = get_match_dict()
-r_matcher = ReplaceMatcher(nlp, match_dict)
+r_matcher = ReplaceMatcher(nlp, match_dict, testing=True)
 
 
 rule_all_suggs_pos = []

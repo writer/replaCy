@@ -1,4 +1,5 @@
 import copy
+import itertools
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional
 
@@ -8,10 +9,11 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 
 from replacy import default_match_hooks
-from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema
+from replacy.db import (get_default_lm, get_forms_lookup, get_match_dict,
+                        get_match_dict_schema)
 from replacy.inflector import Inflector
+from replacy.scorer import KenLMScorer
 from replacy.version import __version__
-
 
 # set known extensions:
 known_string_extensions = ["description", "match_name", "category", "comment"]
@@ -55,7 +57,9 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
         allow_multiple_whitespaces=False,
-        lemmatizer="pyInflect",
+        lemmatizer="pyInflect",                
+        use_lm=True,
+        testing=False
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -70,6 +74,7 @@ class ReplaceMatcher:
         self.inflector = Inflector(
             nlp=self.nlp, forms_lookup=self.forms_lookup, lemmatizer=lemmatizer
         )
+        self.scorer = KenLMScorer(nlp=self.nlp, model=get_default_lm(testing=testing)) if use_lm else None
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -149,64 +154,116 @@ class ReplaceMatcher:
             predicates.append(pred)
         return predicates
 
-    def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
-        """
-        Perform inflection and replace references to the matched token
-        example of pattern and pre_suggestion
-        pattern: "LEMMA": "chock", "TEMPLATE_ID": 1
-        pre_suggestion: "TEXT": "chalk", "FROM_TEMPLATE_ID": 1
-        inflect suggestion "chalk" according to form of "cholk" from patterns
-        """
-        text_list = []
-        for item in pre_suggestion:
-            try:
-                text = item["TEXT"]
-            except KeyError:
-                ref = int(item["PATTERN_REF"])
-                if ref >= 0:
-                    refd_token = doc[start + ref]
-                else:
-                    # this is confusing. Example:
-                    # doc = nlp("I like apples, blood oranges, and bananas")
-                    # start = 2, end = 9 gives doc[start:end] == "apples, blood oranges, and bananas"
-                    # but doc[9] != "bananas", it is an IndexError, the last token is end-1
-                    # so, per python conventions, PATTERN_REF = -1 would mean the last matched token
-                    # so we can just add ref and end if ref is negative
-                    refd_token = doc[end + ref]
-            changed_text = None
+    def get_item(self, item, doc, start, end):
+        
+        item_options = []
+        # set
+        if "TEXT" in item:
+            if isinstance(item["TEXT"], dict):
+                item_options = item["TEXT"].get("IN", [])
+            elif isinstance(item["TEXT"], str):
+                item_options = [item["TEXT"]]
+        # copy
+        elif "PATTERN_REF" in item:
+            ref = int(item["PATTERN_REF"])
+            if ref >= 0:
+                refd_token = doc[start + ref]
+            else:
+                # this is confusing. Example:
+                # doc = nlp("I like apples, blood oranges, and bananas")
+                # start = 2, end = 9 gives doc[start:end] == "apples, blood oranges, and bananas"
+                # but doc[9] != "bananas", it is an IndexError, the last token is end-1
+                # so, per python conventions, PATTERN_REF = -1 would mean the last matched token
+                # so we can just add ref and end if ref is negative
+                # to do: match again to get multi-token
+                refd_token = doc[end + ref]
+            item_options = [refd_token.text]
 
-            # check if inflect
-            if "FROM_TEMPLATE_ID" in item:
-                template_id = item["FROM_TEMPLATE_ID"]
+        return item_options
+
+    def inflect_item(self, item_options, item, doc, start, end, match_name):
+            # set
+            if "INFLECTION" in item:
+                # set by pos + get all forms
+                if isinstance(item["INFLECTION"], dict):
+                    pos_type = item["INFLECTION"].get("POS", None)
+                    item_options = (seq(item_options)
+                                    .map(lambda x: self.inflector.get_all_forms(x, pos_type))
+                                    .flatten()
+                                    .list()
+                    )
+                # set by tag
+                elif isinstance(item["INFLECTION"], str):
+                    tag = item["INFLECTION"]
+                    item_options = [ self.inflector.inflect_or_lookup(x, form) 
+                        for x in item_options    
+                    ]
+            # copy
+            elif "FROM_TEMPLATE_ID" in item:
+                template_id = int(item["FROM_TEMPLATE_ID"])
                 index = None
                 for i, token in enumerate(self.match_dict[match_name]["patterns"]):
                     if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
                         index = i
                         break
                 if index is not None:
-                    changed_text = self.inflector.auto_inflect(doc, text, start + index)
-            elif "PATTERN_REF" in item:
-                if "INFLECTION" in item:
-                    form = item["INFLECTION"]
-                    changed_text = self.inflector.inflect_or_lookup(refd_token, form)
-                else:
-                    changed_text = refd_token.text
+                    item_options = [
+                        self.inflector.auto_inflect(doc, x, start + index)
+                        for x in item_options
+                    ]
+            return item_options
 
-                # This should probably be a list of ops
-                # and we should have a parser class
-                if "REPLACY_OP" in item:
-                    op = item["REPLACY_OP"]
-                    if op == "LOWER":
-                        changed_text = changed_text.lower()
-                    if op == "TITLE":
-                        changed_text = changed_text.title()
-                    if op == "UPPER":
-                        changed_text = changed_text.upper()
-            if changed_text:
-                text_list.append(changed_text)
-            elif len(text):
-                text_list.append(text)
-        return " ".join(text_list)
+    def case_item(self, item_options, item):
+        # This should probably be a list of ops
+        # and we should have a parser class
+        if "REPLACY_OP" in item:
+            op = item["REPLACY_OP"]
+            if op == "LOWER":
+                item_options = [t.lower() for t in item_options]
+            if op == "TITLE":
+                item_options = [t.title() for t in item_options]
+            if op == "UPPER":
+                item_options = [t.upper() for t in item_options]
+        return item_options
+
+    def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
+        """
+        Suggestion text:
+            - set: "TEXT": "cat"
+            - choose one from: "TEXT": {"IN": ["a", "b"]}
+            - copy from pattern: "PATTERN_REF": 3 (copy from 3rd pattern match)
+        Set suggestion text inflection:
+            - set: "INFLECTION": "VBG"
+            - autoinflect: "INFLECTION": {"POS": "VERB"}
+            - copy from pattern: "FROM_TEMPLATE_ID": 2 (copy from token with "TEMPLATE_ID":2)
+        Suggestions case matching:
+            - lowercase: "REPLACY_OP: "LOWER"
+            - title: "REPLACY_OP: "TITLE"
+            - upper: "REPLACY_OP: "UPPER"       
+        """
+        options = []
+        for item in pre_suggestion:
+
+            item_options = self.get_item(item, doc, start, end)
+            inflected_options = self.inflect_item(item_options, item, doc, start, end, match_name)
+            cased_options = self.case_item(item_options, item)
+            options.append(item_options)
+
+        opt_combinations = list(itertools.product(*options))
+
+        opt_text = [" ".join(list(o)) for o in opt_combinations]
+
+        return opt_text
+
+    def score_suggestion(self, doc, span, suggestion):
+        text = " ".join([doc[:span.start].text, suggestion, doc[span.end:].text])
+        return self.scorer(text)
+
+    def sort_suggestions(self, doc, spans):
+        for span in spans:
+            if len(span._.suggestions)>1:
+                span._.suggestions = sorted(span._.suggestions, key=lambda x: self.score_suggestion(doc, span, x))
+        return spans
 
     def get_callback(self, match_name, match_hooks):
         """
@@ -233,11 +290,11 @@ class ReplaceMatcher:
 
             pre_suggestions = self.match_dict[match_name]["suggestions"]
 
-            span._.suggestions = [
-                self.process_suggestions(x, doc, start, end, match_name)
-                for x in pre_suggestions
-            ]
+            span._.suggestions = []
 
+            for x in pre_suggestions:
+                span._.suggestions += self.process_suggestions(x, doc, start, end, match_name)
+                
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
@@ -289,5 +346,8 @@ class ReplaceMatcher:
 
         # this fills up self.spans
         matches = self.matcher(sent)
+
+        if self.scorer:
+            self.spans = self.sort_suggestions(sent, self.spans)
 
         return self.spans

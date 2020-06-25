@@ -9,7 +9,7 @@ nlp = spacy.load("en_core_web_sm")
 
 with open("replacy/resources/match_dict.json", "r") as md:
     match_dict = json.load(md)
-    r_matcher = ReplaceMatcher(nlp, match_dict)
+    r_matcher = ReplaceMatcher(nlp, match_dict, testing=True)
 
 r_matcher.match_dict.update(
     {
@@ -29,7 +29,7 @@ r_matcher.match_dict.update(
         }
     }
 )
-new_matcher = ReplaceMatcher(nlp, r_matcher.match_dict)
+new_matcher = ReplaceMatcher(nlp, r_matcher.match_dict, testing=True)
 # This matches the new entry above
 matched_span = new_matcher("sometest")[0]
 

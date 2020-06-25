@@ -1,4 +1,6 @@
 import spacy
+from spacy.tokens import Token
+
 from replacy.db import get_forms_lookup
 
 
@@ -6,9 +8,9 @@ class Inflector:
     def __init__(self, nlp=None, forms_lookup=None, lemmatizer="pyInflect"):
 
         if lemmatizer == "pyInflect":
-            import pyinflect
+            import pyinflect as inflector_engine
         elif lemmatizer == "lemmInflect":
-            import lemminflect
+            import lemminflect as inflector_engine
         else:
             raise NotImplementedError
 
@@ -28,6 +30,26 @@ class Inflector:
             ):
                 return self.forms_lookup[k][verb_form]
         return None
+
+    def get_all_forms(self, word, pos_type=None):
+
+        if isinstance(word, Token):
+            word = word.text
+
+        inflections = []
+        # set pos type
+        if pos_type:
+            if lemmatizer == "pyInflect":
+                inflection_dict = getAllInflections(word, pos_type=pos_type)
+            else:
+                inflection_dict = getAllInflections(word, upos=pos_type)
+        else:
+            # get all possible inflections
+            inflections_dict = getAllInflections(word)
+
+        for i in inflection_dict.values():
+            inflections += list(i)
+        return inflections
 
     def auto_inflect(self, doc, suggestion, index):
         """
@@ -58,14 +80,17 @@ class Inflector:
 
         return self.inflect_or_lookup(changed_token, token.tag_)
 
-    def inflect_or_lookup(
-        self, token: spacy.tokens.token.Token, form: str
-    ) -> str:
-        inflected_token = token._.inflect(form)
+    def inflect_or_lookup(self, word, form: str) -> str:
+        if isinstance(word, Token):
+            inflected_token = word._.inflect(form)
+            word = word.text
+
+        elif isinstance(word, str):
+            inflected_token = inflector_engine.getInflection(word, tag=form)
 
         # dictionary check
         if not inflected_token:
-            inflected_token = self.get_dict_form(token.text, form)
+            inflected_token = self.get_dict_form(word, form)
 
         return inflected_token
 
@@ -87,11 +112,7 @@ class Inflector:
         if infl_token:
             token = doc[index]
             changed_sent = "".join(
-                [
-                    doc.text[: token.idx],
-                    infl_token,
-                    doc.text[token.idx + len(token) :],
-                ]
+                [doc.text[: token.idx], infl_token, doc.text[token.idx + len(token) :],]
             )
             return changed_sent
         else:
