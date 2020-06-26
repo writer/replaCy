@@ -5,9 +5,10 @@ from replacy import ReplaceMatcher
 from replacy.db import get_match_dict
 
 nlp = spacy.load("en_core_web_sm")
+lm_path = "replacy/resources/test.arpa"
 
-match_dict = match_dict = get_match_dict()
-r_matcher = ReplaceMatcher(nlp, match_dict, testing=True)
+match_dict = get_match_dict()
+r_matcher = ReplaceMatcher(nlp, match_dict, lm_path=lm_path)
 
 test_examples = [
     {

@@ -28,7 +28,7 @@ match_dict = {
     }
 }
 
-r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True, testing=True)
+r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True)
 
 
 def test_multiple_whites():

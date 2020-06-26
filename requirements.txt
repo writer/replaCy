@@ -1,5 +1,4 @@
 pyfunctional>=1.2.0
-pyinflect==0.5.0
 lemminflect==0.2.1
 jsonschema>=3.2.0
 https://github.com/kpu/kenlm/archive/master.zip

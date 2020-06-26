@@ -69,9 +69,5 @@ def get_patterns_test_data(data_path="resources/patterns_test_data.json"):
     return load_json(test_data_path)
 
 
-def get_default_lm(testing=False):
-    if testing:
-        model_path = "replacy/resources/test.arpa"
-    else:
-        model_path = "resources/cor_batches_1-12_lower_4grams.bin"
+def load_lm(model_path):
     return kenlm.Model(model_path)

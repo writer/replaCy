@@ -9,8 +9,8 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 
 from replacy import default_match_hooks
-from replacy.db import (get_default_lm, get_forms_lookup, get_match_dict,
-                        get_match_dict_schema)
+from replacy.db import (get_forms_lookup, get_match_dict,
+                        get_match_dict_schema, load_lm)
 from replacy.inflector import Inflector
 from replacy.scorer import KenLMScorer
 from replacy.version import __version__
@@ -57,9 +57,7 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
         allow_multiple_whitespaces=False,
-        lemmatizer="pyInflect",                
-        use_lm=True,
-        testing=False
+        lm_path=None,
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -71,10 +69,10 @@ class ReplaceMatcher:
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
         self.spans: List[Span] = []
-        self.inflector = Inflector(
-            nlp=self.nlp, forms_lookup=self.forms_lookup, lemmatizer=lemmatizer
+        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
+        self.scorer = (
+            KenLMScorer(nlp=self.nlp, model=load_lm(lm_path)) if lm_path else None
         )
-        self.scorer = KenLMScorer(nlp=self.nlp, model=get_default_lm(testing=testing)) if use_lm else None
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -155,7 +153,7 @@ class ReplaceMatcher:
         return predicates
 
     def get_item(self, item, doc, start, end):
-        
+
         item_options = []
         # set
         if "TEXT" in item:
@@ -182,36 +180,42 @@ class ReplaceMatcher:
         return item_options
 
     def inflect_item(self, item_options, item, doc, start, end, match_name):
-            # set
-            if "INFLECTION" in item:
-                # set by pos + get all forms
-                if isinstance(item["INFLECTION"], dict):
-                    pos_type = item["INFLECTION"].get("POS", None)
-                    item_options = (seq(item_options)
-                                    .map(lambda x: self.inflector.get_all_forms(x, pos_type))
-                                    .flatten()
-                                    .list()
-                    )
-                # set by tag
-                elif isinstance(item["INFLECTION"], str):
-                    tag = item["INFLECTION"]
-                    item_options = [ self.inflector.inflect_or_lookup(x, form) 
-                        for x in item_options    
-                    ]
-            # copy
-            elif "FROM_TEMPLATE_ID" in item:
-                template_id = int(item["FROM_TEMPLATE_ID"])
-                index = None
-                for i, token in enumerate(self.match_dict[match_name]["patterns"]):
-                    if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
-                        index = i
-                        break
-                if index is not None:
-                    item_options = [
-                        self.inflector.auto_inflect(doc, x, start + index)
-                        for x in item_options
-                    ]
-            return item_options
+        # set
+        if "INFLECTION" in item:
+            # set by pos + get all forms
+            if isinstance(item["INFLECTION"], dict):
+                pos_type = item["INFLECTION"].get("POS", None)
+                item_options = (
+                    seq(item_options)
+                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=pos_type))
+                    .flatten()
+                    .list()
+                )
+            # set by tag
+            elif isinstance(item["INFLECTION"], str):
+                tag = item["INFLECTION"]
+                item_options = (
+                    seq(item_options)
+                    .map(lambda x: self.inflector.inflect_or_lookup(x, tag=tag))
+                    .flatten()
+                    .list()
+                )
+        # copy
+        elif "FROM_TEMPLATE_ID" in item:
+            template_id = int(item["FROM_TEMPLATE_ID"])
+            index = None
+            for i, token in enumerate(self.match_dict[match_name]["patterns"]):
+                if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
+                    index = i
+                    break
+            if index is not None:
+                item_options = (
+                    seq(item_options)
+                    .map(lambda x: self.inflector.auto_inflect(doc, x, start + index))
+                    .flatten()
+                    .list()
+                )
+        return item_options
 
     def case_item(self, item_options, item):
         # This should probably be a list of ops
@@ -245,24 +249,28 @@ class ReplaceMatcher:
         for item in pre_suggestion:
 
             item_options = self.get_item(item, doc, start, end)
-            inflected_options = self.inflect_item(item_options, item, doc, start, end, match_name)
-            cased_options = self.case_item(item_options, item)
-            options.append(item_options)
+            inflected_options = self.inflect_item(
+                item_options, item, doc, start, end, match_name
+            )
+            cased_options = self.case_item(inflected_options, item)
+            options.append(cased_options)
 
         opt_combinations = list(itertools.product(*options))
-
         opt_text = [" ".join(list(o)) for o in opt_combinations]
 
         return opt_text
 
     def score_suggestion(self, doc, span, suggestion):
-        text = " ".join([doc[:span.start].text, suggestion, doc[span.end:].text])
+        text = " ".join([doc[: span.start].text, suggestion, doc[span.end :].text])
         return self.scorer(text)
 
     def sort_suggestions(self, doc, spans):
         for span in spans:
-            if len(span._.suggestions)>1:
-                span._.suggestions = sorted(span._.suggestions, key=lambda x: self.score_suggestion(doc, span, x))
+            if len(span._.suggestions) > 1:
+                span._.suggestions = sorted(
+                    span._.suggestions,
+                    key=lambda x: self.score_suggestion(doc, span, x),
+                )
         return spans
 
     def get_callback(self, match_name, match_hooks):
@@ -293,8 +301,10 @@ class ReplaceMatcher:
             span._.suggestions = []
 
             for x in pre_suggestions:
-                span._.suggestions += self.process_suggestions(x, doc, start, end, match_name)
-                
+                span._.suggestions += self.process_suggestions(
+                    x, doc, start, end, match_name
+                )
+
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
