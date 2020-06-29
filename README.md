@@ -2,7 +2,7 @@
 <img src="./docs/replacy_logo.png" align="center" />
 </p>
 
-# replaCy: match & replace - spaCy extension
+# replaCy: match & replace with spaCy
 
 We found that in multiple projects we had duplicate code for using spaCy’s blazing fast matcher to do the same thing: Match-Replace-Grammaticalize. So we wrote replaCy!
 
