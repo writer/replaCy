@@ -1,3 +1,5 @@
+import warnings
+
 import lemminflect
 import spacy
 from spacy.tokens import Token
@@ -71,12 +73,17 @@ class Inflector:
 
     @staticmethod
     def get_inflection_type(value: str):
-        pos_values = ["ADJ", "ADV", "PROPN", "VERB"]
+        pos_values = ["ADJ", "ADV", "NOUN", "PROPN", "VERB", "AUX"]
         if value in pos_values:
             return "pos"
         elif Inflector.tag_to_pos(value) in pos_values:
             return "tag"
+        elif value == "ALL":
+            return "all"
         else:
+            warnings.warn(
+                f"Inflection <<{value}>> not supported, will fallback to <<ALL>>."
+            )
             return "all"
 
     def get_lemmas(self, word, tag=None, pos=None):
