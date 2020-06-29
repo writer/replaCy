@@ -2,8 +2,6 @@ import json
 import os
 from typing import Any, Dict, List, Union
 
-import kenlm
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -70,4 +68,5 @@ def get_patterns_test_data(data_path="resources/patterns_test_data.json"):
 
 
 def load_lm(model_path):
+    import kenlm
     return kenlm.Model(model_path)

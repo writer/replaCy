@@ -58,14 +58,26 @@ class Inflector:
     def tag_to_pos(tag):
         if tag in ["JJ", "JJR", "JJS"]:
             return "ADJ"
-        if tag in ["RB", "RBR", "RBS"]:
+        elif tag in ["RB", "RBR", "RBS"]:
             return "ADV"
-        if tag in ["NN", "NNS"]:
+        elif tag in ["NN", "NNS"]:
             return "NOUN"
-        if tag in ["NNP", "NNPS"]:
+        elif tag in ["NNP", "NNPS"]:
             return "PROPN"
-        if tag in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "MD"]:
+        elif tag in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "MD"]:
             return "VERB"  # AUX
+        else:
+            return tag
+
+    @staticmethod
+    def get_inflection_type(value: str):
+        pos_values = ["ADJ", "ADV", "PROPN", "VERB"]
+        if value in pos_values:
+            return "pos"
+        elif Inflector.tag_to_pos(value) in pos_values:
+            return "tag"
+        else:
+            return "all"
 
     def get_lemmas(self, word, tag=None, pos=None):
 

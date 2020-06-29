@@ -9,8 +9,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 
 from replacy import default_match_hooks
-from replacy.db import (get_forms_lookup, get_match_dict,
-                        get_match_dict_schema, load_lm)
+from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema, load_lm
 from replacy.inflector import Inflector
 from replacy.scorer import KenLMScorer
 from replacy.version import __version__
@@ -182,21 +181,37 @@ class ReplaceMatcher:
     def inflect_item(self, item_options, item, doc, start, end, match_name):
         # set
         if "INFLECTION" in item:
-            # set by pos + get all forms
-            if isinstance(item["INFLECTION"], dict):
-                pos_type = item["INFLECTION"].get("POS", None)
+            inflection_value = item["INFLECTION"]
+            inflection_type = Inflector.get_inflection_type(inflection_value)
+            if inflection_type == "pos":
+                # set by pos
                 item_options = (
                     seq(item_options)
-                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=pos_type))
+                    .map(
+                        lambda x: self.inflector.inflect_or_lookup(
+                            x, pos=inflection_value
+                        )
+                    )
                     .flatten()
                     .list()
                 )
-            # set by tag
-            elif isinstance(item["INFLECTION"], str):
-                tag = item["INFLECTION"]
+            elif inflection_type == "tag":
+                # set by tag
                 item_options = (
                     seq(item_options)
-                    .map(lambda x: self.inflector.inflect_or_lookup(x, tag=tag))
+                    .map(
+                        lambda x: self.inflector.inflect_or_lookup(
+                            x, tag=inflection_value
+                        )
+                    )
+                    .flatten()
+                    .list()
+                )
+            else:
+                # get all forms
+                item_options = (
+                    seq(item_options)
+                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
                     .flatten()
                     .list()
                 )
