@@ -257,7 +257,7 @@ class ReplaceMatcher:
         Set suggestion text inflection:
             - set by tag: "INFLECTION": "VBG" (returns one)
             - set by pos: "INFLECTION": "NOUN" (returns many. ex. NNS, NN)
-            - get all: "INFLECTION": "ALL" (raturns a lot, use infrequently)
+            - get all: "INFLECTION": "ALL" (returns a lot, use infrequently)
             - copy from pattern: "FROM_TEMPLATE_ID": 2 (copy from token with "TEMPLATE_ID":2)
         Suggestions case matching:
             - lowercase: "REPLACY_OP: "LOWER"
