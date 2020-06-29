@@ -54,10 +54,10 @@ ReplaceMatcher accepts both text and spaCy doc.
 
 ```python
 # text is ok
-span = r_matcher("She extracts reverge.")[0]
+span = r_matcher("She extracts revenge.")[0]
 
 # doc is ok too
-doc = nlp("She extracts reverge.")
+doc = nlp("She extracts revenge.")
 span = r_matcher(doc)[0]
 ```
 
