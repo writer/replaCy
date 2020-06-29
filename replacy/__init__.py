@@ -1,5 +1,6 @@
 import copy
 import itertools
+import warnings
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional
 
@@ -56,6 +57,7 @@ class ReplaceMatcher:
         forms_lookup=None,
         custom_match_hooks: Optional[ModuleType] = None,
         allow_multiple_whitespaces=False,
+        max_suggestions_count=1000,
         lm_path=None,
     ):
         self.default_match_hooks = default_match_hooks
@@ -69,6 +71,7 @@ class ReplaceMatcher:
         self._init_matcher()
         self.spans: List[Span] = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
+        self.max_suggestions_count = max_suggestions_count
         self.scorer = (
             KenLMScorer(nlp=self.nlp, model=load_lm(lm_path)) if lm_path else None
         )
@@ -133,7 +136,7 @@ class ReplaceMatcher:
                     pred = template(**kwargs)
             elif type(args) == dict:
                 # should we force them to use kwargs?
-                print(
+                warnings.warn(
                     f"WARNING: dict passed as sole args argument. Calling {hook['name']} "
                     f"with single argument {args}. If you want to call with keyword arguments, use kwargs"
                 )
@@ -252,8 +255,9 @@ class ReplaceMatcher:
             - choose one from: "TEXT": {"IN": ["a", "b"]}
             - copy from pattern: "PATTERN_REF": 3 (copy from 3rd pattern match)
         Set suggestion text inflection:
-            - set: "INFLECTION": "VBG"
-            - autoinflect: "INFLECTION": {"POS": "VERB"}
+            - set by tag: "INFLECTION": "VBG" (returns one)
+            - set by pos: "INFLECTION": "NOUN" (returns many. ex. NNS, NN)
+            - get all: "INFLECTION": "ALL" (raturns a lot, use infrequently)
             - copy from pattern: "FROM_TEMPLATE_ID": 2 (copy from token with "TEMPLATE_ID":2)
         Suggestions case matching:
             - lowercase: "REPLACY_OP: "LOWER"
@@ -270,8 +274,21 @@ class ReplaceMatcher:
             cased_options = self.case_item(inflected_options, item)
             options.append(cased_options)
 
-        opt_combinations = list(itertools.product(*options))
-        opt_text = [" ".join(list(o)) for o in opt_combinations]
+        # assert there aren't more than max_suggestions_count
+        # otherwise raise warning and return []
+        suggestions_count = (
+            seq(options).map(lambda x: len(x)).reduce(lambda x, y: x * y)
+        )
+
+        if suggestions_count > self.max_suggestions_count:
+            warnings.warn(
+                f"Got {suggestions_count} suggestions, max is {self.max_suggestions_count}. \
+                Will fallback to empty suggestions."
+            )
+            opt_text = []
+        else:
+            opt_combinations = list(itertools.product(*options))
+            opt_text = [" ".join(list(o)) for o in opt_combinations]
 
         return opt_text
 
