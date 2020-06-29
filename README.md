@@ -12,6 +12,11 @@ We found that in multiple projects we had duplicate code for using spaCy’s bla
 - Replace - Not built into spaCy’s matcher syntax, but easily added. You often want to replace a matched word with some other term.
 - Grammaticalize - If you match on ”LEMMA”: “dance”, and replace with suggestions: ["sing"], but the actual match is danced, you need to conjugate “sing” appropriately. This is the “killer feature” of replaCy
 
+[![spaCy](https://img.shields.io/badge/made%20with%20❤%20and-spaCy-09a3d5.svg)](https://spacy.io)
+[![pypi Version](https://img.shields.io/pypi/v/replacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/replacy/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+
+
 ## Requirements
 
 - `spacy >= 2.0` (not installed by default, but replaCy needs to be instantiated with an `nlp` object)
