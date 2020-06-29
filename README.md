@@ -2,9 +2,7 @@
 <img src="./docs/replacy_logo.png" align="center" />
 </p>
 
-# replaCy
-match - replace - spaCy extension
---------------------------------------------------------------------------------
+# replaCy: match & replace - spaCy extension
 
 We found that in multiple projects we had duplicate code for using spaCy’s blazing fast matcher to do the same thing: Match-Replace-Grammaticalize. So we wrote replaCy!
 
@@ -15,6 +13,10 @@ We found that in multiple projects we had duplicate code for using spaCy’s bla
 [![spaCy](https://img.shields.io/badge/made%20with%20❤%20and-spaCy-09a3d5.svg)](https://spacy.io)
 [![pypi Version](https://img.shields.io/pypi/v/replacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/replacy/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+
+<p align="center">
+<img src="./docs/replacy_ex.png" align="center" />
+</p>
 
 
 ## Requirements
@@ -37,7 +39,7 @@ match_dict = load_json('/path/to/your/match/dict.json')
 # load nlp spacy model of your choice
 nlp = spacy.load("en_core_web_sm")
 
-rmatcher = ReplaceMatcher(nlp)
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict)
 
 # get inflected suggestions
 # look up the first suggestion
@@ -61,17 +63,18 @@ span = r_matcher(doc)[0]
 
 ## Inflection library
 
-ReplaCy uses inflection module underhood. Currently supported inflection libraries:
+ReplaCy uses [LemmInflect](https://github.com/bjascob/LemmInflect) inflection module underhood.
 
-- [pyInflect](https://github.com/bjascob/pyinflect) - default
-- [LemmInflect](https://github.com/bjascob/LemmInflect) - slower, more accurate
-
-```python
-# default initialization will load pyInflect
-r_matcher = ReplaceMatcher(nlp)
-
-# to use LemmInflect
-r_matcher = ReplaceMatcher(nlp, lemmatizer="lemmInflect")
+Speed abd accuracy benchmark (copied from the Lemminflect repo):
+```
+| Package          | Verb  |  Noun | ADJ/ADV | Overall |  Speed  |
+|----------------------------------------------------------------|
+| LemmInflect      | 96.1% | 95.4% |  93.9%  |  95.6%  | 42.0 uS |
+| CLiPS/pattern.en | 93.6% | 91.1% |   0.0%  |  n/a    |  3.0 uS |
+| Stanford CoreNLP | 87.6% | 93.1% |   0.0%  |  n/a    |  n/a    |
+| spaCy            | 79.4% | 88.9% |  60.5%  |  84.7%  |  5.0 uS |
+| NLTK             | 53.3% | 52.2% |  53.3%  |  52.6%  | 13.0 uS |
+|----------------------------------------------------------------|
 ```
 
 ## match_dict.json format
@@ -354,3 +357,15 @@ In order to automatically add whitespace tokens to all patterns in your `match_d
 `r_matcher = ReplaceMatcher(nlp, match_dict, allow_multiple_whitespaces=True)`
 
 By default `allow_multiple_whitespaces` is set to `False`.
+
+## Citing
+
+If you use replaCy in your research, please cite with the following BibText
+
+```bibtext
+@misc{havens2019replacy,
+    title  = {SpaCy match and replace, maintaining conjugation},
+    author = {Sam Havens and Aneta Stal},
+    url    = {https://github.com/Qordobacode/replaCy},
+    year   = {2019}
+}
