@@ -1,4 +1,10 @@
+<p align="center">
+<img src="./docs/replacy_logo.png" align="center" />
+</p>
+
 # replaCy
+match - replace - spaCy extension
+--------------------------------------------------------------------------------
 
 We found that in multiple projects we had duplicate code for using spaCy’s blazing fast matcher to do the same thing: Match-Replace-Grammaticalize. So we wrote replaCy!
 
