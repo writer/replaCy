@@ -315,8 +315,23 @@ from replacy.db import load_json
 match_dict = load_json('/path/to/your/match/dict')
 ReplaceMatcher.validate_match_dict(match_dict)
 ```
+## Miscellaneous
 
-## Multiple spaces support
+### Suggestions ranking
+
+ReplaCy supports multiple suggestions, which by default are not ranked.
+Ideally, one could use a very performant language model to sort the output.
+Our recommendation: [KenLM](https://github.com/kpu/kenlm).
+
+Load your KenLM model by passing `lm_path`:
+
+```python
+lm_path='/path/to/your/kenlm/model.bin'
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path)
+```
+
+
+### Multiple spaces support
 
 Sometimes text input includes unwated signs, such as:
 
@@ -358,7 +373,7 @@ In order to automatically add whitespace tokens to all patterns in your `match_d
 
 By default `allow_multiple_whitespaces` is set to `False`.
 
-## Citing
+# Citing
 
 If you use replaCy in your research, please cite with the following BibText
 
