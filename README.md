@@ -66,7 +66,8 @@ span = r_matcher(doc)[0]
 ReplaCy uses [LemmInflect](https://github.com/bjascob/LemmInflect) inflection module underhood.
 
 Speed and accuracy benchmark (copied from the Lemminflect repo):
-```
+
+```sh
 | Package          | Verb  |  Noun | ADJ/ADV | Overall |  Speed  |
 |----------------------------------------------------------------|
 | LemmInflect      | 96.1% | 95.4% |  93.9%  |  95.6%  | 42.0 uS |
@@ -315,21 +316,21 @@ from replacy.db import load_json
 match_dict = load_json('/path/to/your/match/dict')
 ReplaceMatcher.validate_match_dict(match_dict)
 ```
+
 ## Miscellaneous
 
 ### Suggestions ranking
 
-ReplaCy supports multiple suggestions, which by default are not ranked.
-Ideally, one could use a very performant language model to sort the output.
-Our recommendation: [KenLM](https://github.com/kpu/kenlm).
+ReplaCy supports multiple suggestions, which by default are not ranked. If you would like the suggestions to be sorted, replaCy allows ranking by LM perplexity. Currently, we support one LM: [KenLM](https://github.com/kpu/kenlm).
 
-Load your KenLM model by passing `lm_path`:
+To use this feature, you must first install KenLM from GitHub, using something like `pip install git+https://github.com/kpu/kenlm#egg=kenlm` or `poetry add git+https://github.com/kpu/kenlm@master`, or whatever way you deal with the nightmare that are Python dependencies.
+
+Load your KenLM model by passing `lm_path` when instantiating an instance of `ReplaceMatcher`:
 
 ```python
 lm_path='/path/to/your/kenlm/model.bin'
 rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path)
 ```
-
 
 ### Multiple spaces support
 
@@ -352,7 +353,7 @@ patterns in `match_dict` should have extra whitespace tokens:
 
 ex.
 
-```
+```python
 "patterns": [
                 {
                     "LOWER": "a"
