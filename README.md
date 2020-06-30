@@ -65,7 +65,7 @@ span = r_matcher(doc)[0]
 
 ReplaCy uses [LemmInflect](https://github.com/bjascob/LemmInflect) inflection module underhood.
 
-Speed abd accuracy benchmark (copied from the Lemminflect repo):
+Speed and accuracy benchmark (copied from the Lemminflect repo):
 ```
 | Package          | Verb  |  Noun | ADJ/ADV | Overall |  Speed  |
 |----------------------------------------------------------------|
