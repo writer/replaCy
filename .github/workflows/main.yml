@@ -15,7 +15,6 @@ jobs:
       - name: Install deps
         run: |
           echo "quitely installing dependencies..."
-          python3 -m pip install -q --upgrade twine setuptools wheel
           python3 -m pip install -qr requirements.txt
           python3 -m pip install -qr requirements-dev.txt
       - name: Run tests
