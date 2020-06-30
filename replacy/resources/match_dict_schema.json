@@ -97,6 +97,18 @@
                 }
             }
         },
+        "textOperator":{
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "IN": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "spacyValue": {
             "oneOf": [
                 {
@@ -110,12 +122,22 @@
                 }
             ]
         },
+        "textValue":{
+            "oneOf":[
+                {
+                    "type": "string"
+                },
+                {
+                    "$ref": "#/definitions/textOperator"
+                }
+            ]
+        },
         "replacySuggestionItem": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "TEXT": {
-                    "type": "string"
+                    "$ref": "#/definitions/textValue"
                 },
                 "FROM_TEMPLATE_ID": {
                     "type": "integer"
@@ -124,7 +146,31 @@
                     "type": "integer"
                 },
                 "INFLECTION": {
-                    "type": "string"
+                    "enum": [
+                        "ADJ", 
+                        "ADV", 
+                        "PROPN", 
+                        "VERB",
+                        "AUX",
+                        "JJ", 
+                        "JJR", 
+                        "JJS",
+                        "RB", 
+                        "RBR", 
+                        "RBS",
+                        "NN", 
+                        "NNS",
+                        "NNP", 
+                        "NNPS",
+                        "VB", 
+                        "VBD", 
+                        "VBG", 
+                        "VBN", 
+                        "VBP", 
+                        "VBZ", 
+                        "MD",
+                        "ALL"
+                    ]
                 }
             }
         },

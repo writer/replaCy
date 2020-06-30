@@ -65,3 +65,8 @@ def get_match_dict_schema(schema_path="resources/match_dict_schema.json"):
 def get_patterns_test_data(data_path="resources/patterns_test_data.json"):
     test_data_path = os.path.join(here, data_path)
     return load_json(test_data_path)
+
+
+def load_lm(model_path):
+    import kenlm
+    return kenlm.Model(model_path)

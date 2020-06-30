@@ -2,8 +2,9 @@
 .vscode
 .DS_Store
 
-# Checkpoints:
+# Checkpoints and models:
 *.pt
+*.bin
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
