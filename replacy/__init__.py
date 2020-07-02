@@ -12,7 +12,6 @@ from spacy.tokens import Span
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema, load_lm
 from replacy.inflector import Inflector
-from replacy.scorer import KenLMScorer
 from replacy.version import __version__
 
 # set known extensions:
@@ -72,9 +71,18 @@ class ReplaceMatcher:
         self.spans: List[Span] = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
         self.max_suggestions_count = max_suggestions_count
-        self.scorer = (
-            KenLMScorer(nlp=self.nlp, model=load_lm(lm_path)) if lm_path else None
-        )
+        # The following is not ideal
+        # we probably want to have a Scorer interface, that different LMs can adhere to
+        # and then have a Default Scorer which applies the identity function,
+        # rather than using null
+        if lm_path:
+            from replacy.scorer import KenLMScorer
+
+            self.scorer: Optional[KenLMScorer] = KenLMScorer(
+                nlp=self.nlp, model=load_lm(lm_path)
+            )
+        else:
+            self.scorer = None
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -262,7 +270,7 @@ class ReplaceMatcher:
         Suggestions case matching:
             - lowercase: "REPLACY_OP: "LOWER"
             - title: "REPLACY_OP: "TITLE"
-            - upper: "REPLACY_OP: "UPPER"       
+            - upper: "REPLACY_OP: "UPPER"
         """
         options = []
         for item in pre_suggestion:
