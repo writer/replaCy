@@ -10,8 +10,10 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 
 from replacy import default_match_hooks
-from replacy.db import get_forms_lookup, get_match_dict, get_match_dict_schema, load_lm
+from replacy.db import (get_forms_lookup, get_match_dict,
+                        get_match_dict_schema, load_lm)
 from replacy.inflector import Inflector
+from replacy.ref_matcher import RefMatcher
 from replacy.version import __version__
 
 # set known extensions:
@@ -68,6 +70,7 @@ class ReplaceMatcher:
 
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
+        self.ref_matcher = RefMatcher(self.nlp)
         self.spans: List[Span] = []
         self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
         self.max_suggestions_count = max_suggestions_count
@@ -162,7 +165,7 @@ class ReplaceMatcher:
             predicates.append(pred)
         return predicates
 
-    def get_item(self, item, doc, start, end):
+    def get_item(self, item, doc, start, end, pattern_ref):
 
         item_options = []
         # set
@@ -175,7 +178,19 @@ class ReplaceMatcher:
         elif "PATTERN_REF" in item:
             ref = int(item["PATTERN_REF"])
             if ref >= 0:
-                refd_token = doc[start + ref]
+                try:
+                    refd_tokens = pattern_ref[ref]
+                    if len(refd_tokens):
+                        min_i = min(refd_tokens)
+                        max_i = max(refd_tokens)
+                        refd_text = doc[min_i : max_i + 1].text
+                    else:
+                        refd_text = ""
+                except:
+                    warnings.warn(
+                        f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
+                    )
+                    refd_text = doc[start + ref].text
             else:
                 # this is confusing. Example:
                 # doc = nlp("I like apples, blood oranges, and bananas")
@@ -184,12 +199,29 @@ class ReplaceMatcher:
                 # so, per python conventions, PATTERN_REF = -1 would mean the last matched token
                 # so we can just add ref and end if ref is negative
                 # to do: match again to get multi-token
-                refd_token = doc[end + ref]
-            item_options = [refd_token.text]
+                try:
+                    # map ref to positive
+                    ref = len(pattern_ref) + ref
+                    refd_tokens = pattern_ref[ref]
+                    if len(refd_tokens):
+                        min_i = min(refd_tokens)
+                        max_i = max(refd_tokens)
+                        refd_text = doc[min_i : max_i + 1].text
+                    else:
+                        refd_text = ""
+                except:
+                    warnings.warn(
+                        f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
+                    )
+                    refd_text = doc[end + ref].text
+
+            item_options = [refd_text]
 
         return item_options
 
-    def inflect_item(self, item_options, item, doc, start, end, match_name):
+    def inflect_item(
+        self, item_options, item, doc, start, end, match_name, pattern_ref
+    ):
         # set
         if "INFLECTION" in item:
             inflection_value = item["INFLECTION"]
@@ -234,10 +266,27 @@ class ReplaceMatcher:
                 if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
                     index = i
                     break
-            if index is not None:
+
+            # use token <-> pattern mapping
+            # given pattern index, find doc index:
+            doc_indices = pattern_ref[index]
+            if len(doc_indices) == 0:
+                # fallback to direct mapping:
+                warnings.warn(
+                    f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
+                )
+                doc_index = index
+            elif len(doc_indices) >= 1:
+                # == 1 good case
+                # >1 more tokens found, fallback to the first token
+                doc_index = doc_indices[0]
+
+            if doc_index is not None:
                 item_options = (
                     seq(item_options)
-                    .map(lambda x: self.inflector.auto_inflect(doc, x, start + index))
+                    .map(
+                        lambda x: self.inflector.auto_inflect(doc, x, start + doc_index)
+                    )
                     .flatten()
                     .list()
                 )
@@ -272,12 +321,17 @@ class ReplaceMatcher:
             - title: "REPLACY_OP: "TITLE"
             - upper: "REPLACY_OP: "UPPER"
         """
+        # get token <-> pattern correspondence
+        span = doc[start:end]
+        pattern = self.match_dict[match_name]["patterns"]
+        pattern_ref = self.ref_matcher(span, pattern)
+
         options = []
         for item in pre_suggestion:
 
-            item_options = self.get_item(item, doc, start, end)
+            item_options = self.get_item(item, doc, start, end, pattern_ref)
             inflected_options = self.inflect_item(
-                item_options, item, doc, start, end, match_name
+                item_options, item, doc, start, end, match_name, pattern_ref
             )
             cased_options = self.case_item(inflected_options, item)
             options.append(cased_options)
