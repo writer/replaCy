@@ -172,6 +172,6 @@ class RefMatcher:
         # clean
         self.clean_matcher()
 
-        # shift by negatives and skipped ops
+        # shift by skipped ops
         pattern_ref = self.shift_pattern_ref(pattern_ref, skipped_idx)
         return pattern_ref
