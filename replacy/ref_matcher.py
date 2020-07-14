@@ -158,10 +158,6 @@ class RefMatcher:
                 # len 0 shouldn't happen except weird white spaces
                 m_id, m_start, m_end = max(m, key=lambda x: x[2] - x[1])
 
-                # project m_id to int
-                # string since matcher screams if keys are ints
-                m_id = int(m_id)
-
                 # if cropped span matches cropped pattern
                 # 1st token of cropped span belongs to 1st cropped pattern item
                 if not m_id in pattern_ref:
