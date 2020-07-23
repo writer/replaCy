@@ -185,7 +185,7 @@ class ReplaceMatcher:
                         max_i = max(refd_tokens)
                         refd_text = doc[min_i : max_i + 1].text
                     else:
-                        refd_text = ""
+                        refd_text = None
                 except:
                     warnings.warn(
                         f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
@@ -208,15 +208,18 @@ class ReplaceMatcher:
                         max_i = max(refd_tokens)
                         refd_text = doc[min_i : max_i + 1].text
                     else:
-                        refd_text = ""
+                        refd_text = None
                 except:
                     warnings.warn(
                         f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
                     )
                     refd_text = doc[end + ref].text
 
-            item_options = [refd_text]
-
+            if refd_text:
+                item_options = [refd_text]
+            else:
+                item_options = []
+            
         return item_options
 
     def inflect_item(
@@ -335,6 +338,9 @@ class ReplaceMatcher:
             )
             cased_options = self.case_item(inflected_options, item)
             options.append(cased_options)
+
+        # remove empty items (can happen when using non matched OPs)
+        options = [o for o in options if len(o)]
 
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []

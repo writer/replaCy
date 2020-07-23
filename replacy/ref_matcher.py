@@ -6,6 +6,7 @@ from spacy.matcher import Matcher
 
 class RefMatcher:
     def __init__(self, nlp):
+        self.nlp = nlp
         self.matcher = Matcher(nlp.vocab)
 
     def clean_matcher(self):
@@ -44,7 +45,7 @@ class RefMatcher:
 
         for op in op_tokens:
             op_pattern = copy.deepcopy(pattern)
-            # remove ? to require 1 instead of 0
+            # remove "?" to require 1 instead of 0
             if op_pattern[op]["OP"] == "?":
                 if len(op_pattern[op]) == 1:
                     # if no more props,
@@ -53,7 +54,7 @@ class RefMatcher:
                     op_pattern[op]["TEXT"] = "alice and bob"
                     op_pattern[op]["OP"] = "!"
                 del op_pattern[op]["OP"]
-            # change * to +, to require 1+ instead of 0+
+            # change "*" to "+", to require 1+ instead of 0+
             elif op_pattern[op]["OP"] == "*":
                 op_pattern[op]["OP"] = "+"
             self.matcher.add(op, None, op_pattern)

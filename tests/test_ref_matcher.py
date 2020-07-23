@@ -66,8 +66,7 @@ sents = [
 
 suggestions = [
     "A delivery of fresh juicy sandwiches was made to everyone at the shop before lunchtime .",
-    # todo - remove double spaces comming from nonmatched tokens
-    "I fed some  popcorn to the dog",
+    "I fed some popcorn to the dog",
 ]
 
 
