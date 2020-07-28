@@ -41,7 +41,7 @@ def preceded_by_phrase(phrase) -> SpacyMatchPredicate:
         phrase_list = phrase
 
         def _preceded_by_phrase(doc, start, end):
-            bools = [doc[end:].text.lower().endswith(p.lower()) for p in phrase_list]
+            bools = [doc[:start].text.lower().endswith(p.lower()) for p in phrase_list]
             return any(bools)
 
         return _preceded_by_phrase
