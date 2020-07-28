@@ -345,7 +345,7 @@ class ReplaceMatcher:
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []
         suggestions_count = (
-            seq(options).map(lambda x: len(x)).reduce(lambda x, y: x * y)
+            seq(options).map(lambda x: len(x)).reduce(lambda x, y: x * y, 1)
         )
 
         if suggestions_count > self.max_suggestions_count:
