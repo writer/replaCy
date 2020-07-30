@@ -181,8 +181,8 @@ class ReplaceMatcher:
                 try:
                     refd_tokens = pattern_ref[ref]
                     if len(refd_tokens):
-                        min_i = min(refd_tokens)
-                        max_i = max(refd_tokens)
+                        min_i = start + min(refd_tokens)
+                        max_i = start + max(refd_tokens)
                         refd_text = doc[min_i : max_i + 1].text
                     else:
                         refd_text = None
@@ -204,8 +204,8 @@ class ReplaceMatcher:
                     ref = len(pattern_ref) + ref
                     refd_tokens = pattern_ref[ref]
                     if len(refd_tokens):
-                        min_i = min(refd_tokens)
-                        max_i = max(refd_tokens)
+                        min_i = start + min(refd_tokens)
+                        max_i = start + max(refd_tokens)
                         refd_text = doc[min_i : max_i + 1].text
                     else:
                         refd_text = None
