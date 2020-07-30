@@ -61,7 +61,7 @@ r_matcher = ReplaceMatcher(nlp, match_dict)
 
 sents = [
     "The fresh juicy sandwiches were delivered to everyone at the shop before lunchtime.",
-    "I fed the dog some popcorn.",
+    "Looks like I fed the dog some popcorn.",
 ]
 
 suggestions = [
@@ -73,5 +73,6 @@ suggestions = [
 def test_refs():
     for sent, sugg in zip(sents, suggestions):
         span = r_matcher(sent)
+        print(span[0])
         print(span[0]._.suggestions[0])
         assert span[0]._.suggestions[0] == sugg
