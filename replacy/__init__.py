@@ -169,6 +169,11 @@ class ReplaceMatcher:
     @staticmethod
     def equal_except_nth_place(list1, list2, n):
         # compares two lists, skips nth place
+
+        # if different length - not equal
+        if len(list1) != len(list2):
+            return False
+
         for i in range(len(list1)):
             if i != n:
                 if list1[i].text != list2[i].text:
@@ -239,7 +244,6 @@ class ReplaceMatcher:
         suggestion_variants = self.suggestion_gen(
             pre_suggestion, doc, start, end, pattern
         )
-
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []
         suggestions_count = (
@@ -275,7 +279,14 @@ class ReplaceMatcher:
         for span in spans:
             suggestions = []
             for s in span._.suggestions:
-                suggestions += [" ".join([t.text for t in s])]
+                # in case of two exactly overlapping spans
+                # this could case problems
+                # this should be handled by early span filtering
+                try:
+                    suggestions += [" ".join([t.text for t in s])]
+                except AttributeError:
+                    return spans
+
             span._.suggestions = suggestions
         return spans
 
@@ -359,10 +370,9 @@ class ReplaceMatcher:
             sent.text
         except AttributeError:
             sent = self.nlp(sent)
-
+        
         # this fills up self.spans
         matches = self.matcher(sent)
-
         if self.scorer:
             # sort suggestions by lm score
             self.spans = self.sort_suggestions(sent, self.spans)

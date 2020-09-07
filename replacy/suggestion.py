@@ -8,13 +8,10 @@ from replacy.ref_matcher import RefMatcher
 
 
 class SuggestionGenerator:
-    def __init__(self, nlp, forms_lookup=None, default_max_count=None):
+    def __init__(self, nlp, forms_lookup=None):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
         self.ref_matcher = RefMatcher(nlp)
-        self.default_max_count = (
-            default_max_count if default_max_count else float("inf")
-        )
 
     @staticmethod
     def get_options(item, doc, start, end, pattern_ref):
@@ -77,7 +74,7 @@ class SuggestionGenerator:
 
         default_max_count = item.get("MAX_COUNT", None)
         if not default_max_count:
-            default_max_count = self.default_max_count
+            default_max_count = len(item_options)
 
         # empty
         # ex. []
