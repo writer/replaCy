@@ -117,6 +117,11 @@ class SuggestionGenerator:
             if len(set(["a", "an", "the"]) & set(item_options)) > 0:
                 return 1
 
+            # irregular plurals
+            # person / people
+            if len(set(["person", "people"]) & set(item_options)) == 2:
+                return 1
+
         return default_max_count
 
     def inflect(self, item, item_options, pattern, pattern_ref, doc, start, end):
