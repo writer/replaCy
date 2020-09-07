@@ -51,12 +51,34 @@ output = [
     "They gave us the story THEY themselves created",
 ]
 
-r_matcher = ReplaceMatcher(
-    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa"
-)
+output_default_max_count_1 = [
+    'They sang us a stories THEY themselves wrote',
+    'They sang us a story THEY themselves made',
+    'They gave us a stories THEY themselves made',
+    'They gave us a story THEY themselves wrote',
+    'They sang us the stories THEY themselves made',
+    'They sang us the story THEY themselves wrote',
+    'They gave us the stories THEY themselves wrote',
+    'They gave us the story THEY themselves made',
+    'They sang us some stories THEY themselves created',
+    'They gave us some story THEY themselves created',
+]
 
 
 def test_suggestions():
+    r_matcher = ReplaceMatcher(
+    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa")
+
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions
     assert all([a == b for a, b in zip(suggestions, output)])
+
+def test_default_max_count():
+    r_matcher = ReplaceMatcher(
+    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", default_max_count=1)
+
+    spans = r_matcher("They read us the stories they themselves had written.")
+    suggestions = spans[0]._.suggestions
+    from pprint import pprint
+    pprint(suggestions)
+    assert all([a == b for a, b in zip(suggestions, output_default_max_count_1)])

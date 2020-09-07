@@ -8,10 +8,11 @@ from replacy.ref_matcher import RefMatcher
 
 
 class SuggestionGenerator:
-    def __init__(self, nlp, forms_lookup=None):
+    def __init__(self, nlp, forms_lookup=None, default_max_count=None):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
         self.ref_matcher = RefMatcher(nlp)
+        self.default_max_count = default_max_count
 
     @staticmethod
     def get_options(item, doc, start, end, pattern_ref):
@@ -72,26 +73,39 @@ class SuggestionGenerator:
 
     def get_item_max_count(self, item, item_options):
 
-        default_max_count = item.get("MAX_COUNT", None)
-        if not default_max_count:
-            default_max_count = len(item_options)
+        # max count can be hard set in match_dict
+        max_count = item.get("MAX_COUNT", None)
+        if max_count:
+            return max_count
 
-        # empty
+        # can be soft set by default 
+        # but no more than possible - ex. list len
+        # or maximal ie. list len
+        if self.default_max_count:
+            max_count = min(self.default_max_count, len(item_options))
+        else:
+            max_count = len(item_options)
+
+        # if max count is not hard set
+        # try to lower max count in special cases (A - G)
+        # to eliminate non grammatical suggestions
+
+        # A. empty
         # ex. []
         if not len(item_options):
             return 1
 
-        # contains non letters
+        # B. contains non letters
         # ex. ["", ","]
         if not all([o.isalpha() for o in item_options]):
             return 1
 
-        # is multi token
+        # C. is multi token
         # ex. ["in a", "for"]
         if max([len(o.split()) for o in item_options]) > 1:
             return 1
 
-        # if inflection is set to tag - good
+        # D. if inflection is set to tag - good
         # other options - will always return many
         if "INFLECTION" in item:
             inflection = item.get("INFLECTION")
@@ -103,7 +117,7 @@ class SuggestionGenerator:
         # ex. ["eat", "walk"]
         if len(item_options) > 1:
 
-            # contains words of the same lemma
+            # E. contains words of the same lemma
             # ex. [slow, slowly]
             lemmas = set([])
             for option in item_options:
@@ -112,12 +126,12 @@ class SuggestionGenerator:
                     return 1
                 lemmas = lemmas.union(option_lemmas)
 
-            # det:
+            # F. det:
             # ex. ["a", "an"]
             if len(set(["a", "an", "the"]) & set(item_options)) > 0:
                 return 1
 
-            # irregular plurals - only 2 detected so hardcoded
+            # G. irregular plurals - only 2 detected so hardcoded
             # person / people
             # ox / oxen
             if len(set(["person", "people"]) & set(item_options)) == 2:
@@ -125,7 +139,7 @@ class SuggestionGenerator:
             if len(set(["ox", "oxen"]) & set(item_options)) == 2:
                 return 1
 
-        return default_max_count
+        return max_count
 
     def inflect(self, item, item_options, pattern, pattern_ref, doc, start, end):
         # set
