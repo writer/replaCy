@@ -59,6 +59,7 @@ class ReplaceMatcher:
         allow_multiple_whitespaces=False,
         max_suggestions_count=1000,
         lm_path=None,
+        filter_suggestions=False,
         default_max_count=None,
     ):
         self.default_match_hooks = default_match_hooks
@@ -74,7 +75,7 @@ class ReplaceMatcher:
         self.max_suggestions_count = max_suggestions_count
 
         self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
-        self.suggestion_gen = SuggestionGenerator(nlp, forms_lookup, default_max_count)
+        self.suggestion_gen = SuggestionGenerator(nlp, forms_lookup, filter_suggestions, default_max_count)
 
         # The following is not ideal
         # we probably want to have a Scorer interface, that different LMs can adhere to

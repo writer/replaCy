@@ -8,10 +8,11 @@ from replacy.ref_matcher import RefMatcher
 
 
 class SuggestionGenerator:
-    def __init__(self, nlp, forms_lookup=None, default_max_count=None):
+    def __init__(self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
         self.ref_matcher = RefMatcher(nlp)
+        self.filter_suggestions = filter_suggestions
         self.default_max_count = default_max_count
 
     @staticmethod
@@ -86,6 +87,12 @@ class SuggestionGenerator:
         else:
             max_count = len(item_options)
 
+        # if we don't want to guess max count
+        # to eliminate grammatical variants
+        # end here
+        if not self.filter_suggestions:
+            return max_count
+        
         # if max count is not hard set
         # try to lower max count in special cases (A - G)
         # to eliminate non grammatical suggestions

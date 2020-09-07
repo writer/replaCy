@@ -67,7 +67,7 @@ output_default_max_count_1 = [
 
 def test_suggestions():
     r_matcher = ReplaceMatcher(
-    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa")
+    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", filter_suggestions=True)
 
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions
@@ -75,7 +75,7 @@ def test_suggestions():
 
 def test_default_max_count():
     r_matcher = ReplaceMatcher(
-    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", default_max_count=1)
+    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", filter_suggestions=True, default_max_count=1)
 
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions
