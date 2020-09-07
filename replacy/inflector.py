@@ -71,8 +71,7 @@ class Inflector:
         else:
             return tag
 
-    @staticmethod
-    def get_inflection_type(value: str):
+    def get_inflection_type(self, value: str):
         pos_values = ["ADJ", "ADV", "NOUN", "PROPN", "VERB", "AUX"]
         if value in pos_values:
             return "pos"

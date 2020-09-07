@@ -42,6 +42,9 @@ def test_scorer():
         span = doc[example["span_start"] : example["span_end"]]
         span._.suggestions = example["suggestions"]
 
-        span_sorted = r_matcher.sort_suggestions(doc, [span])[0]
-        best_suggestion = span_sorted._.suggestions[0]
+        sorted_suggestions = sorted(
+            span._.suggestions,
+            key=lambda x: r_matcher.score_suggestion(doc, span, [x]),
+        )
+        best_suggestion = sorted_suggestions[0]
         assert example["best_suggestion"] == best_suggestion
