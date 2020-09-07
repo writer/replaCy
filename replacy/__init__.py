@@ -280,12 +280,13 @@ class ReplaceMatcher:
             suggestions = []
             for s in span._.suggestions:
                 # in case of two exactly overlapping spans
-                # this could case problems
+                # some of suggestions could be already processed
+                # this could cause problems
                 # this should be handled by early span filtering
                 try:
                     suggestions += [" ".join([t.text for t in s])]
                 except AttributeError:
-                    return spans
+                    suggestions.append(s)
 
             span._.suggestions = suggestions
         return spans
@@ -370,7 +371,6 @@ class ReplaceMatcher:
             sent.text
         except AttributeError:
             sent = self.nlp(sent)
-        
         # this fills up self.spans
         matches = self.matcher(sent)
         if self.scorer:
