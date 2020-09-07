@@ -117,9 +117,12 @@ class SuggestionGenerator:
             if len(set(["a", "an", "the"]) & set(item_options)) > 0:
                 return 1
 
-            # irregular plurals
+            # irregular plurals - only 2 detected so hardcoded
             # person / people
+            # ox / oxen
             if len(set(["person", "people"]) & set(item_options)) == 2:
+                return 1
+            if len(set(["ox", "oxen"]) & set(item_options)) == 2:
                 return 1
 
         return default_max_count
