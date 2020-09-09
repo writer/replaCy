@@ -52,33 +52,93 @@ output = [
 ]
 
 output_default_max_count_1 = [
-    'They sang us a stories THEY themselves wrote',
-    'They sang us a story THEY themselves made',
-    'They gave us a stories THEY themselves made',
-    'They gave us a story THEY themselves wrote',
-    'They sang us the stories THEY themselves made',
-    'They sang us the story THEY themselves wrote',
-    'They gave us the stories THEY themselves wrote',
-    'They gave us the story THEY themselves made',
-    'They sang us some stories THEY themselves created',
-    'They gave us some story THEY themselves created',
+    "They sang us a stories THEY themselves wrote",
+    "They sang us a story THEY themselves made",
+    "They gave us a stories THEY themselves made",
+    "They gave us a story THEY themselves wrote",
+    "They sang us the stories THEY themselves made",
+    "They sang us the story THEY themselves wrote",
+    "They gave us the stories THEY themselves wrote",
+    "They gave us the story THEY themselves made",
+    "They sang us some stories THEY themselves created",
+    "They gave us some story THEY themselves created",
 ]
 
 
 def test_suggestions():
     r_matcher = ReplaceMatcher(
-    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", filter_suggestions=True)
+        nlp,
+        match_dict=match_dict,
+        lm_path="./replacy/resources/test.arpa",
+        filter_suggestions=True,
+    )
 
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions
     assert all([a == b for a, b in zip(suggestions, output)])
 
+
 def test_default_max_count():
     r_matcher = ReplaceMatcher(
-    nlp, match_dict=match_dict, lm_path="./replacy/resources/test.arpa", filter_suggestions=True, default_max_count=1)
+        nlp,
+        match_dict=match_dict,
+        lm_path="./replacy/resources/test.arpa",
+        filter_suggestions=True,
+        default_max_count=1,
+    )
 
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions
-    from pprint import pprint
-    pprint(suggestions)
+
     assert all([a == b for a, b in zip(suggestions, output_default_max_count_1)])
+
+
+short_match_dict = {
+    "match-1": {
+        "patterns": [
+            {"LOWER": {"IN": ["they", "she"]}},
+            {"LEMMA": "read", "TEMPLATE_ID": 1},
+        ],
+        "suggestions": [
+            [
+                {"PATTERN_REF": 0},
+                {"FROM_TEMPLATE_ID": 1, "TEXT": {"IN": ["sing", "give"]}},
+            ]
+        ],
+        "test": {"negative": [], "positive": []},
+    }
+}
+
+
+def test_manual_max_count():
+    # use short match dict
+    # default_max_count=1
+    # expect 1 suggestion
+
+    r_matcher = ReplaceMatcher(
+        nlp,
+        match_dict=short_match_dict,
+        lm_path="./replacy/resources/test.arpa",
+        filter_suggestions=True,
+        default_max_count=1,
+    )
+    spans = r_matcher("They read us the stories they themselves had written.")
+    assert len(spans[0]._.suggestions) == 1
+
+    # MAX_COUNT=2 for ['sing', 'give']
+    # default_max_count=1
+    # expect 2 suggestions
+
+    short_match_dict["match-1"]["suggestions"][0][1]["MAX_COUNT"] = 2
+
+    r_matcher = ReplaceMatcher(
+        nlp,
+        match_dict=short_match_dict,
+        lm_path="./replacy/resources/test.arpa",
+        filter_suggestions=True,
+        default_max_count=1,
+    )
+    spans = r_matcher("They read us the stories they themselves had written.")
+    suggestions = spans[0]._.suggestions
+
+    assert len(spans[0]._.suggestions) == 2
