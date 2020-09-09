@@ -131,7 +131,7 @@ class SuggestionGenerator:
                 option_lemmas = set(self.inflector.get_lemmas(option))
                 if len(lemmas & option_lemmas):
                     return 1
-                lemmas = lemmas.union(option_lemmas)
+                lemmas |= option_lemmas
 
             # F. det:
             # ex. ["a", "an"]

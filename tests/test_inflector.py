@@ -2,6 +2,8 @@ import pytest
 
 from replacy.inflector import Inflector
 
+xfail = pytest.mark.xfail
+
 inflector = Inflector()
 
 inflector_dataset = [
@@ -40,13 +42,17 @@ Important for max count estimation (see: suggestion.py).
 
 Exceptions to handle separately:
     {
-        "plural":"person", 
-        "singular": "people"
+        "plural":"people", 
+        "singular": "person"
     },
     {
         "plural": "ox", 
         "singular": "oxen"
     }
+
+Why do we test this?
+ReplaCy uses ML-based lemminflect to lemmatize. 
+This test assures any lemminflect model upgrades do not break current behaviour.
 """
 
 irregular_nouns = [
@@ -132,8 +138,27 @@ irregular_nouns = [
     }
 ]
 
+irregular_nouns_lemma_exceptions = [
+    {
+        "plural": "people", 
+        "singular": "person"
+    },
+    {
+        "plural": "ox", 
+        "singular": "oxen"
+    }
+]
+
 @pytest.mark.parametrize("pair", irregular_nouns)
 def test_lemmatization(pair):
+    singular_lemmas = set(inflector.get_lemmas(pair["singular"]))
+    plural_lemmas = set(inflector.get_lemmas(pair["plural"]))
+
+    assert len(singular_lemmas & plural_lemmas) > 0, "lemmas are different!"
+
+@xfail(raises=AssertionError)
+@pytest.mark.parametrize("pair", irregular_nouns_lemma_exceptions)
+def test_lemmatization_exceptions(pair):
     singular_lemmas = set(inflector.get_lemmas(pair["singular"]))
     plural_lemmas = set(inflector.get_lemmas(pair["plural"]))
 
