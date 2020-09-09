@@ -383,6 +383,13 @@ Additionally, any suggestion item can have `MAX_COUNT` property, which overwrite
         ],
 ```
 
+Add `debug=True` to get information about accepted and suppressed suggestions along with their `MAX_COUNT`:
+```python
+lm_path='/path/to/your/kenlm/model.bin'
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path, filter_suggestions=True, default_max_count=2, debug=True)
+```
+
+
 ### Multiple spaces support
 
 Sometimes text input includes unwated signs, such as:
