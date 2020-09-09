@@ -141,9 +141,7 @@ class SuggestionGenerator:
             # G. irregular plurals - only 2 detected so hardcoded
             # person / people
             # ox / oxen
-            if len(set(["person", "people"]) & set(item_options)) == 2:
-                return 1
-            if len(set(["ox", "oxen"]) & set(item_options)) == 2:
+            if all([el in item_options for el in ["person", "people"]]) or all([el in item_options for el in ["ox", "oxen"]]):
                 return 1
 
         return max_count
