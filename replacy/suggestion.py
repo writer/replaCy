@@ -135,7 +135,7 @@ class SuggestionGenerator:
 
             # F. det:
             # ex. ["a", "an"]
-            if len(set(["a", "an", "the"]) & set(item_options)) > 0:
+            if any([article in item_options for article in ["a", "an", "the"]]):
                 return 1
 
             # G. irregular plurals - only 2 detected so hardcoded
