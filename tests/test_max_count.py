@@ -121,6 +121,7 @@ def test_manual_max_count():
         lm_path="./replacy/resources/test.arpa",
         filter_suggestions=True,
         default_max_count=1,
+        debug=True
     )
     spans = r_matcher("They read us the stories they themselves had written.")
     assert len(spans[0]._.suggestions) == 1
@@ -137,6 +138,7 @@ def test_manual_max_count():
         lm_path="./replacy/resources/test.arpa",
         filter_suggestions=True,
         default_max_count=1,
+        debug=True
     )
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions

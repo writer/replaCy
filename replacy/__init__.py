@@ -1,5 +1,6 @@
 import copy
 import itertools
+import logging
 import warnings
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional
@@ -14,6 +15,8 @@ from replacy.db import (get_forms_lookup, get_match_dict,
                         get_match_dict_schema, load_lm)
 from replacy.suggestion import SuggestionGenerator
 from replacy.version import __version__
+
+logging.basicConfig(level=logging.INFO)
 
 # set known extensions:
 known_string_extensions = ["description", "match_name", "category", "comment"]
@@ -61,6 +64,7 @@ class ReplaceMatcher:
         lm_path=None,
         filter_suggestions=False,
         default_max_count=None,
+        debug=False,
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -89,6 +93,9 @@ class ReplaceMatcher:
             )
         else:
             self.scorer = None
+
+        self.debug = debug
+        self.logger = logging.getLogger('replaCy')
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -217,12 +224,11 @@ class ReplaceMatcher:
                     ]
         return rest
 
-    @staticmethod
-    def max_count_filter(spans):
+    def max_count_filter(self):
         # for each span, reduce number of suggestions
         # based on max_count of each suggestion text item
         # assumption - elements are already sorted
-        for span in spans:
+        for span in self.spans:
             suggestions = span._.suggestions
             if len(suggestions):
                 rest = suggestions
@@ -236,8 +242,18 @@ class ReplaceMatcher:
                     # not eliminated => good
                     chosen.append(elem)
                     rest = ReplaceMatcher.eliminate_options(elem, chosen, rest)
+                
+                # log matched span and filtered out suggestions
+                if self.debug:
+                    
+                    self.logger.info(f"{span._.match_name} matched '{span.text}' token indices {span.start}:{span.end}")
+                    self.logger.info(f"Accepted suggestions: {chosen}")
+
+                    suggestions_diff = [f for f in suggestions if f not in chosen]
+                    if len(suggestions_diff):
+                        self.logger.info(f"Ignored suggestions: {suggestions_diff}")
+                
                 span._.suggestions = chosen
-        return spans
 
     def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
         # get token <-> pattern correspondence
@@ -267,18 +283,16 @@ class ReplaceMatcher:
         text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
         return self.scorer(text)
 
-    def sort_suggestions(self, doc, spans):
-        for span in spans:
+    def sort_suggestions(self, doc):
+        for span in self.spans:
             if len(span._.suggestions) > 1:
                 span._.suggestions = sorted(
                     span._.suggestions,
                     key=lambda x: self.score_suggestion(doc, span, [t.text for t in x]),
                 )
-        return spans
 
-    @staticmethod
-    def join_suggestions(spans):
-        for span in spans:
+    def join_suggestions(self):
+        for span in self.spans:
             suggestions = []
             for s in span._.suggestions:
                 # in case of two exactly overlapping spans
@@ -291,7 +305,6 @@ class ReplaceMatcher:
                     suggestions.append(s)
 
             span._.suggestions = suggestions
-        return spans
 
     def get_callback(self, match_name, match_hooks):
         """
@@ -377,11 +390,11 @@ class ReplaceMatcher:
         matches = self.matcher(sent)
         if self.scorer:
             # sort suggestions by lm score
-            self.spans = self.sort_suggestions(sent, self.spans)
+            self.sort_suggestions(sent)
             # filter out based on max_count
-            self.spans = ReplaceMatcher.max_count_filter(self.spans)
+            self.max_count_filter()
 
         # merge lists of words into phrases
-        self.spans = ReplaceMatcher.join_suggestions(self.spans)
+        self.join_suggestions()
 
         return self.spans
