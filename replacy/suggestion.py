@@ -230,7 +230,7 @@ class SuggestionGenerator:
                 item_options = [t.upper() for t in item_options]
         return item_options
 
-    def __call__(self, pre_suggestion, doc, start, end, pattern):
+    def __call__(self, pre_suggestion, doc, start, end, pattern, pre_suggestion_id):
         """
         Suggestion text:
             - set: "TEXT": "cat"
@@ -273,32 +273,34 @@ class SuggestionGenerator:
 
             # if non empty (can be when matching with OP)
             if len(cased_options):
-                suggestion_variant = SuggestionVariants(cased_options, max_count)
+                suggestion_variant = SuggestionVariants(cased_options, max_count, pre_suggestion_id)
                 suggestions.append(suggestion_variant)
 
         return suggestions
 
 
 class SuggestionVariants:
-    def __init__(self, cased_options, max_count):
+    def __init__(self, cased_options, max_count, id):
         self.cased_options = cased_options
         self.max_count = max_count
+        self.id = id
 
     def __len__(self):
         return len(self.cased_options)
 
     def __repr__(self):
-        return f'(cased_options={",".join(self.cased_options)}, max_count={self.max_count})'
+        return f'(cased_options={",".join(self.cased_options)}, max_count={self.max_count}, id={self.id})'
 
     def __iter__(self):
         for option in self.cased_options:
-            yield Suggestion(option, self.max_count)
+            yield Suggestion(option, self.max_count, self.id)
 
 
 class Suggestion:
-    def __init__(self, text, max_count):
+    def __init__(self, text, max_count, id):
         self.text = text
         self.max_count = max_count
+        self.id = id
 
     def __repr__(self):
-        return f"(text={self.text}, max_count={self.max_count})"
+        return f"(text={self.text}, max_count={self.max_count}, id={self.id})"
