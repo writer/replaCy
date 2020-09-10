@@ -332,6 +332,64 @@ lm_path='/path/to/your/kenlm/model.bin'
 rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path)
 ```
 
+### Suggestions filtering
+
+This step assumes using suggestions ranking.
+Matches in `match_dict` can have multiple options of 2 types:
+
+I. grammar / syntactic variants ex. people / person, a / an
+
+ex. 
+- (A) `Foo a fo fo.` 
+- (B) `Foo an fo fo.`
+
+If A is ranked higher, you can hide B (most probably incorrect) by setting `filter_suggestions` to `True`:
+
+```python
+lm_path='/path/to/your/kenlm/model.bin'
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path, filter_suggestions=True)
+```
+
+ReplaCy does guessing for you. Expect suggestions filtering if:
+-- variants have the same lemma ex. kid / kids, walk / walked
+-- variants are DET, ex. a / an
+-- variants consist of more than one word, ex. think / think of
+
+
+II. lexical variants ex. tall / big / huge
+
+ex. 
+- (A) `Foo foo big foo.` 
+- (B) `Foo foo huge foo.`
+- (C) `Foo foo tall foo.`
+
+Set `default_max_count` to any integer to display top n suggestions, ex. `default_max_count=2` would display just A and B.
+
+```python
+lm_path='/path/to/your/kenlm/model.bin'
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path, filter_suggestions=True, default_max_count=2)
+```
+
+Additionally, any suggestion item can have `MAX_COUNT` property, which overwrites the above rules ( `filter_suggestions` and `default_max_count` can be omitted ), ex.
+
+```
+        "suggestions": [
+            [
+                {
+                    "TEXT": {"IN": ["big", "huge", "tall", "high"]},
+                    "MAX_COUNT": 3
+                }
+            ]
+        ],
+```
+
+Add `debug=True` to get information about accepted and suppressed suggestions along with their `MAX_COUNT`:
+```python
+lm_path='/path/to/your/kenlm/model.bin'
+rmatcher = ReplaceMatcher(nlp, match_dict=match_dict, lm_path=lm_path, filter_suggestions=True, default_max_count=2, debug=True)
+```
+
+
 ### Multiple spaces support
 
 Sometimes text input includes unwated signs, such as:

@@ -1,5 +1,6 @@
 import copy
 import itertools
+import logging
 import warnings
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional
@@ -12,9 +13,10 @@ from spacy.tokens import Span
 from replacy import default_match_hooks
 from replacy.db import (get_forms_lookup, get_match_dict,
                         get_match_dict_schema, load_lm)
-from replacy.inflector import Inflector
-from replacy.ref_matcher import RefMatcher
+from replacy.suggestion import SuggestionGenerator
 from replacy.version import __version__
+
+logging.basicConfig(level=logging.INFO)
 
 # set known extensions:
 known_string_extensions = ["description", "match_name", "category", "comment"]
@@ -60,20 +62,25 @@ class ReplaceMatcher:
         allow_multiple_whitespaces=False,
         max_suggestions_count=1000,
         lm_path=None,
+        filter_suggestions=False,
+        default_max_count=None,
+        debug=False,
     ):
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
         self.nlp = nlp
         self.match_dict = match_dict if match_dict else get_match_dict()
-        self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
+
         self.allow_multiple_whitespaces = allow_multiple_whitespaces
 
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
-        self.ref_matcher = RefMatcher(self.nlp)
         self.spans: List[Span] = []
-        self.inflector = Inflector(nlp=self.nlp, forms_lookup=self.forms_lookup)
         self.max_suggestions_count = max_suggestions_count
+
+        self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
+        self.suggestion_gen = SuggestionGenerator(nlp, forms_lookup, filter_suggestions, default_max_count)
+
         # The following is not ideal
         # we probably want to have a Scorer interface, that different LMs can adhere to
         # and then have a Default Scorer which applies the identity function,
@@ -86,6 +93,9 @@ class ReplaceMatcher:
             )
         else:
             self.scorer = None
+
+        self.debug = debug
+        self.logger = logging.getLogger('replaCy')
 
         # set custom extensions for any unexpected keys found in the match_dict
         novel_properites = (
@@ -165,187 +175,97 @@ class ReplaceMatcher:
             predicates.append(pred)
         return predicates
 
-    def get_item(self, item, doc, start, end, pattern_ref):
+    @staticmethod
+    def equal_except_nth_place(list1, list2, n):
+        # compares two lists, skips nth place
 
-        item_options = []
-        # set
-        if "TEXT" in item:
-            if isinstance(item["TEXT"], dict):
-                item_options = item["TEXT"].get("IN", [])
-            elif isinstance(item["TEXT"], str):
-                item_options = [item["TEXT"]]
-        # copy
-        elif "PATTERN_REF" in item:
-            ref = int(item["PATTERN_REF"])
-            if ref >= 0:
-                try:
-                    refd_tokens = pattern_ref[ref]
-                    if len(refd_tokens):
-                        min_i = start + min(refd_tokens)
-                        max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i : max_i + 1].text
-                    else:
-                        refd_text = None
-                except:
-                    warnings.warn(
-                        f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
-                    )
-                    refd_text = doc[start + ref].text
+        # if different length - not equal
+        if len(list1) != len(list2):
+            return False
+
+        for i in range(len(list1)):
+            if i != n:
+                if list1[i].text != list2[i].text:
+                    return False
+        return True
+
+    @staticmethod
+    def eliminate_options(elem, chosen, rest):
+        # use elem to eliminate elements above the max_count limits
+        for i, item in enumerate(elem):
+            # item with no max count
+            max_count = item.max_count
+            elem_text = item.text
+            if max_count is None:
+                continue
+            # item is exclusive (= max count 1)
+            elif max_count == 1:
+                # eliminate equal except i from rest
+                rest = [
+                    r
+                    for r in rest
+                    if not ReplaceMatcher.equal_except_nth_place(elem, r, i)
+                ]
+            # item has a custom max count
             else:
-                # this is confusing. Example:
-                # doc = nlp("I like apples, blood oranges, and bananas")
-                # start = 2, end = 9 gives doc[start:end] == "apples, blood oranges, and bananas"
-                # but doc[9] != "bananas", it is an IndexError, the last token is end-1
-                # so, per python conventions, PATTERN_REF = -1 would mean the last matched token
-                # so we can just add ref and end if ref is negative
-                # to do: match again to get multi-token
-                try:
-                    # map ref to positive
-                    ref = len(pattern_ref) + ref
-                    refd_tokens = pattern_ref[ref]
-                    if len(refd_tokens):
-                        min_i = start + min(refd_tokens)
-                        max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i : max_i + 1].text
-                    else:
-                        refd_text = None
-                except:
-                    warnings.warn(
-                        f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
-                    )
-                    refd_text = doc[end + ref].text
+                # get hom many times this item has been used so far
+                # it this very context
+                current_count = [
+                    r
+                    for r in chosen
+                    if ReplaceMatcher.equal_except_nth_place(elem, r, i)
+                ]
+                # it this is max (with elem), eliminate other options from rest
+                if len(current_count) >= max_count:
+                    rest = [
+                        r
+                        for r in rest
+                        if not ReplaceMatcher.equal_except_nth_place(elem, r, i)
+                    ]
+        return rest
 
-            if refd_text:
-                item_options = [refd_text]
-            else:
-                item_options = []
-            
-        return item_options
+    def max_count_filter(self):
+        # for each span, reduce number of suggestions
+        # based on max_count of each suggestion text item
+        # assumption - elements are already sorted
+        for span in self.spans:
+            suggestions = span._.suggestions
+            if len(suggestions):
+                rest = suggestions
+                chosen = []
 
-    def inflect_item(
-        self, item_options, item, doc, start, end, match_name, pattern_ref
-    ):
-        # set
-        if "INFLECTION" in item:
-            inflection_value = item["INFLECTION"]
-            inflection_type = Inflector.get_inflection_type(inflection_value)
-            if inflection_type == "pos":
-                # set by pos
-                item_options = (
-                    seq(item_options)
-                    .map(
-                        lambda x: self.inflector.inflect_or_lookup(
-                            x, pos=inflection_value
-                        )
-                    )
-                    .flatten()
-                    .list()
-                )
-            elif inflection_type == "tag":
-                # set by tag
-                item_options = (
-                    seq(item_options)
-                    .map(
-                        lambda x: self.inflector.inflect_or_lookup(
-                            x, tag=inflection_value
-                        )
-                    )
-                    .flatten()
-                    .list()
-                )
-            else:
-                # get all forms
-                item_options = (
-                    seq(item_options)
-                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
-                    .flatten()
-                    .list()
-                )
-        # copy
-        elif "FROM_TEMPLATE_ID" in item:
-            template_id = int(item["FROM_TEMPLATE_ID"])
-            index = None
-            for i, token in enumerate(self.match_dict[match_name]["patterns"]):
-                if "TEMPLATE_ID" in token and token["TEMPLATE_ID"] == template_id:
-                    index = i
-                    break
+                while len(rest):
+                    elem = rest[0]
+                    rest = rest[1:]
 
-            # use token <-> pattern mapping
-            # given pattern index, find doc index:
-            doc_indices = pattern_ref[index]
-            if len(doc_indices) == 0:
-                # fallback to direct mapping:
-                warnings.warn(
-                    f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
-                )
-                doc_index = index
-            elif len(doc_indices) >= 1:
-                # == 1 good case
-                # >1 more tokens found, fallback to the first token
-                doc_index = doc_indices[0]
+                    # the first element in rest
+                    # not eliminated => good
+                    chosen.append(elem)
+                    rest = ReplaceMatcher.eliminate_options(elem, chosen, rest)
+                
+                # log matched span and filtered out suggestions
+                if self.debug:
+                    
+                    self.logger.info(f"{span._.match_name} matched '{span.text}' token indices {span.start}:{span.end}")
+                    self.logger.info(f"Accepted suggestions: {chosen}")
 
-            if doc_index is not None:
-                item_options = (
-                    seq(item_options)
-                    .map(
-                        lambda x: self.inflector.auto_inflect(doc, x, start + doc_index)
-                    )
-                    .flatten()
-                    .list()
-                )
-        return item_options
-
-    def case_item(self, item_options, item):
-        # This should probably be a list of ops
-        # and we should have a parser class
-        if "REPLACY_OP" in item:
-            op = item["REPLACY_OP"]
-            if op == "LOWER":
-                item_options = [t.lower() for t in item_options]
-            if op == "TITLE":
-                item_options = [t.title() for t in item_options]
-            if op == "UPPER":
-                item_options = [t.upper() for t in item_options]
-        return item_options
+                    suggestions_diff = [f for f in suggestions if f not in chosen]
+                    if len(suggestions_diff):
+                        self.logger.info(f"Ignored suggestions: {suggestions_diff}")
+                
+                span._.suggestions = chosen
 
     def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
-        """
-        Suggestion text:
-            - set: "TEXT": "cat"
-            - choose one from: "TEXT": {"IN": ["a", "b"]}
-            - copy from pattern: "PATTERN_REF": 3 (copy from 3rd pattern match)
-        Set suggestion text inflection:
-            - set by tag: "INFLECTION": "VBG" (returns one)
-            - set by pos: "INFLECTION": "NOUN" (returns many. ex. NNS, NN)
-            - get all: "INFLECTION": "ALL" (returns a lot, use infrequently)
-            - copy from pattern: "FROM_TEMPLATE_ID": 2 (copy from token with "TEMPLATE_ID":2)
-        Suggestions case matching:
-            - lowercase: "REPLACY_OP: "LOWER"
-            - title: "REPLACY_OP: "TITLE"
-            - upper: "REPLACY_OP: "UPPER"
-        """
         # get token <-> pattern correspondence
-        span = doc[start:end]
         pattern = self.match_dict[match_name]["patterns"]
-        pattern_ref = self.ref_matcher(span, pattern)
 
-        options = []
-        for item in pre_suggestion:
-
-            item_options = self.get_item(item, doc, start, end, pattern_ref)
-            inflected_options = self.inflect_item(
-                item_options, item, doc, start, end, match_name, pattern_ref
-            )
-            cased_options = self.case_item(inflected_options, item)
-            options.append(cased_options)
-
-        # remove empty items (can happen when using non matched OPs)
-        options = [o for o in options if len(o)]
-
+        suggestion_variants = self.suggestion_gen(
+            pre_suggestion, doc, start, end, pattern
+        )
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []
         suggestions_count = (
-            seq(options).map(lambda x: len(x)).reduce(lambda x, y: x * y, 1)
+            seq(suggestion_variants).map(lambda x: len(x)).reduce(lambda x, y: x * y, 1)
         )
 
         if suggestions_count > self.max_suggestions_count:
@@ -353,25 +273,38 @@ class ReplaceMatcher:
                 f"Got {suggestions_count} suggestions, max is {self.max_suggestions_count}. \
                 Will fallback to empty suggestions."
             )
-            opt_text = []
+            opt_combinations = []
         else:
-            opt_combinations = list(itertools.product(*options))
-            opt_text = [" ".join(list(o)) for o in opt_combinations]
-
-        return opt_text
+            opt_combinations = list(itertools.product(*suggestion_variants))
+            opt_combinations = [list(o) for o in opt_combinations]
+        return opt_combinations
 
     def score_suggestion(self, doc, span, suggestion):
-        text = " ".join([doc[: span.start].text, suggestion, doc[span.end :].text])
+        text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
         return self.scorer(text)
 
-    def sort_suggestions(self, doc, spans):
-        for span in spans:
+    def sort_suggestions(self, doc):
+        for span in self.spans:
             if len(span._.suggestions) > 1:
                 span._.suggestions = sorted(
                     span._.suggestions,
-                    key=lambda x: self.score_suggestion(doc, span, x),
+                    key=lambda x: self.score_suggestion(doc, span, [t.text for t in x]),
                 )
-        return spans
+
+    def join_suggestions(self):
+        for span in self.spans:
+            suggestions = []
+            for s in span._.suggestions:
+                # in case of two exactly overlapping spans
+                # some of suggestions could be already processed
+                # this could cause problems
+                # this should be handled by early span filtering
+                try:
+                    suggestions += [" ".join([t.text for t in s])]
+                except AttributeError:
+                    suggestions.append(s)
+
+            span._.suggestions = suggestions
 
     def get_callback(self, match_name, match_hooks):
         """
@@ -453,11 +386,15 @@ class ReplaceMatcher:
             sent.text
         except AttributeError:
             sent = self.nlp(sent)
-
         # this fills up self.spans
         matches = self.matcher(sent)
-
         if self.scorer:
-            self.spans = self.sort_suggestions(sent, self.spans)
+            # sort suggestions by lm score
+            self.sort_suggestions(sent)
+            # filter out based on max_count
+            self.max_count_filter()
+
+        # merge lists of words into phrases
+        self.join_suggestions()
 
         return self.spans

@@ -137,7 +137,7 @@ class RefMatcher:
 
         # case III:
         # worst case
-        # get shitfs for multitokens
+        # get shifts for multitokens
         # ie rematching cropped spans and patterns
 
         # A. get cropped patterns
