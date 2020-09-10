@@ -179,6 +179,14 @@ class ReplaceMatcher:
     def equal_except_nth_place(list1, list2, n):
         # compares two lists, skips nth place
 
+        # if empty:
+        if not len(list1)*len(list2):
+            return False
+
+        # if suggestions come from different suggestions:
+        if list1[0].id != list2[0].id:
+            return False
+
         # if different length - not equal
         if len(list1) != len(list2):
             return False
@@ -255,12 +263,12 @@ class ReplaceMatcher:
                 
                 span._.suggestions = chosen
 
-    def process_suggestions(self, pre_suggestion, doc, start, end, match_name):
+    def process_suggestions(self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
 
         suggestion_variants = self.suggestion_gen(
-            pre_suggestion, doc, start, end, pattern
+            pre_suggestion, doc, start, end, pattern, pre_suggestion_id
         )
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []
@@ -333,9 +341,9 @@ class ReplaceMatcher:
 
             span._.suggestions = []
 
-            for x in pre_suggestions:
+            for i, x in enumerate(pre_suggestions):
                 span._.suggestions += self.process_suggestions(
-                    x, doc, start, end, match_name
+                    x, doc, start, end, match_name, i
                 )
 
             span._.description = self.match_dict[match_name].get("description", "")

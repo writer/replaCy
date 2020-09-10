@@ -93,6 +93,37 @@ def test_default_max_count():
     assert all([a == b for a, b in zip(suggestions, output_default_max_count_1)])
 
 
+short_match_dict_2_sugg = {
+    "match-1": {
+        "patterns": [
+            {"LOWER": {"IN": ["they", "she"]}},
+            {"LEMMA": "read", "TEMPLATE_ID": 1},
+        ],
+        "suggestions": [
+            [
+                {"PATTERN_REF": 0},
+                {"FROM_TEMPLATE_ID": 1, "TEXT": {"IN": ["sing", "give"]}},
+            ],
+            [
+                {"PATTERN_REF": 0},
+                {"FROM_TEMPLATE_ID": 1, "TEXT": "dance"},
+            ]
+        ],
+        "test": {"negative": [], "positive": []},
+    }
+}
+
+def test_multiple_suggestions_max_count():
+    r_matcher = ReplaceMatcher(
+    nlp,
+    match_dict=short_match_dict_2_sugg,
+    lm_path="./replacy/resources/test.arpa",
+    filter_suggestions=True,
+    debug=True
+    )
+    spans = r_matcher("They read us the stories they themselves had written.")
+    assert len(spans[0]._.suggestions) == 3
+
 short_match_dict = {
     "match-1": {
         "patterns": [
@@ -108,7 +139,6 @@ short_match_dict = {
         "test": {"negative": [], "positive": []},
     }
 }
-
 
 def test_manual_max_count():
     # use short match dict
