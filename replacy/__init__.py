@@ -195,7 +195,6 @@ class ReplaceMatcher:
             if i != n:
                 if list1[i].text != list2[i].text:
                     return False
-        print("eliminating", list1, list2, n)
         return True
 
     @staticmethod
