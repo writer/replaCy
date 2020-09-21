@@ -10,6 +10,8 @@ lm_path = "replacy/resources/test.arpa"
 match_dict = get_match_dict()
 r_matcher = ReplaceMatcher(nlp, match_dict, lm_path=lm_path)
 
+dumb_matcher = ReplaceMatcher(nlp, match_dict, lm_path=None)
+
 test_examples = [
     {
         "sent": "This x a sentence.",
@@ -35,16 +37,15 @@ test_examples = [
 ]
 
 
-def test_scorer():
+@pytest.mark.parametrize("example", test_examples)
+def test_scorer(example):
+    doc = nlp(example["sent"])
+    span = doc[example["span_start"] : example["span_end"]]
+    span._.suggestions = example["suggestions"]
 
-    for example in test_examples:
-        doc = nlp(example["sent"])
-        span = doc[example["span_start"] : example["span_end"]]
-        span._.suggestions = example["suggestions"]
-
-        sorted_suggestions = sorted(
-            span._.suggestions,
-            key=lambda x: r_matcher.score_suggestion(doc, span, [x]),
-        )
-        best_suggestion = sorted_suggestions[0]
-        assert example["best_suggestion"] == best_suggestion
+    sorted_suggestions = sorted(
+        span._.suggestions,
+        key=lambda x: r_matcher.scorer.score_suggestion(doc, span, [x]),
+    )
+    best_suggestion = sorted_suggestions[0]
+    assert example["best_suggestion"] == best_suggestion

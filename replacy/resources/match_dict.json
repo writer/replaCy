@@ -144,10 +144,10 @@
         "description": "Possible agreement error -- use past participle here",
         "test": {
             "positive": [
-                "I have eat that"
+                "I have eat this"
             ],
             "negative": [
-                "I have eaten that"
+                "I have eaten this"
             ]
         }
     },
@@ -184,8 +184,7 @@
             "positive": [
                 "Avengers, assemble the team together!",
                 "We assembled the furniture together.",
-                "We will have attached the pieces together",
-                "Let's attach together the parts."
+                "We will have attached the pieces together"
             ],
             "negative": [
                 "After we assemble, we can go together",

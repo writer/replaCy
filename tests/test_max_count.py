@@ -36,7 +36,7 @@ match_dict = {
     }
 }
 
-output = [
+outputs = [
     "They sang us a stories THEY themselves wrote",
     "They sang us a stories THEY themselves made",
     "They sang us a stories THEY themselves created",
@@ -64,33 +64,37 @@ output_default_max_count_1 = [
     "They gave us some story THEY themselves created",
 ]
 
+r_matcher1 = ReplaceMatcher(
+    nlp,
+    match_dict=match_dict,
+    lm_path="./replacy/resources/test.arpa",
+    filter_suggestions=True,
+)
+
+spans = r_matcher1("They read us the stories they themselves had written.")
+suggestions = spans[0]._.suggestions
+
 
 def test_suggestions():
-    r_matcher = ReplaceMatcher(
-        nlp,
-        match_dict=match_dict,
-        lm_path="./replacy/resources/test.arpa",
-        filter_suggestions=True,
-    )
+    assert suggestions == outputs
 
-    spans = r_matcher("They read us the stories they themselves had written.")
-    suggestions = spans[0]._.suggestions
-    assert all([a == b for a, b in zip(suggestions, output)])
+
+r_matcher_max_count_1 = ReplaceMatcher(
+    nlp,
+    match_dict=match_dict,
+    lm_path="./replacy/resources/test.arpa",
+    filter_suggestions=True,
+    default_max_count=1,
+)
+
+spans_max_count_1 = r_matcher_max_count_1(
+    "They read us the stories they themselves had written."
+)
+suggestions_max_count_1 = spans_max_count_1[0]._.suggestions
 
 
 def test_default_max_count():
-    r_matcher = ReplaceMatcher(
-        nlp,
-        match_dict=match_dict,
-        lm_path="./replacy/resources/test.arpa",
-        filter_suggestions=True,
-        default_max_count=1,
-    )
-
-    spans = r_matcher("They read us the stories they themselves had written.")
-    suggestions = spans[0]._.suggestions
-
-    assert all([a == b for a, b in zip(suggestions, output_default_max_count_1)])
+    assert suggestions_max_count_1 == output_default_max_count_1
 
 
 short_match_dict_2_sugg = {
@@ -104,25 +108,24 @@ short_match_dict_2_sugg = {
                 {"PATTERN_REF": 0},
                 {"FROM_TEMPLATE_ID": 1, "TEXT": {"IN": ["sing", "give"]}},
             ],
-            [
-                {"PATTERN_REF": 0},
-                {"FROM_TEMPLATE_ID": 1, "TEXT": "dance"},
-            ]
+            [{"PATTERN_REF": 0}, {"FROM_TEMPLATE_ID": 1, "TEXT": "dance"},],
         ],
         "test": {"negative": [], "positive": []},
     }
 }
 
+
 def test_multiple_suggestions_max_count():
     r_matcher = ReplaceMatcher(
-    nlp,
-    match_dict=short_match_dict_2_sugg,
-    lm_path="./replacy/resources/test.arpa",
-    filter_suggestions=True,
-    debug=True
+        nlp,
+        match_dict=short_match_dict_2_sugg,
+        lm_path="./replacy/resources/test.arpa",
+        filter_suggestions=True,
+        debug=True,
     )
     spans = r_matcher("They read us the stories they themselves had written.")
     assert len(spans[0]._.suggestions) == 3
+
 
 short_match_dict = {
     "match-1": {
@@ -140,6 +143,7 @@ short_match_dict = {
     }
 }
 
+
 def test_manual_max_count():
     # use short match dict
     # default_max_count=1
@@ -151,7 +155,7 @@ def test_manual_max_count():
         lm_path="./replacy/resources/test.arpa",
         filter_suggestions=True,
         default_max_count=1,
-        debug=True
+        debug=True,
     )
     spans = r_matcher("They read us the stories they themselves had written.")
     assert len(spans[0]._.suggestions) == 1
@@ -168,7 +172,7 @@ def test_manual_max_count():
         lm_path="./replacy/resources/test.arpa",
         filter_suggestions=True,
         default_max_count=1,
-        debug=True
+        debug=True,
     )
     spans = r_matcher("They read us the stories they themselves had written.")
     suggestions = spans[0]._.suggestions

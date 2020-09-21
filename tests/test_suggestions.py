@@ -36,7 +36,7 @@ match_dict = {
     }
 }
 
-output = [
+outputs = [
     "They sang us a stories THEY themselves wrote",
     "They sang us a stories THEY themselves made",
     "They sang us a stories THEY themselves created",
@@ -76,9 +76,9 @@ output = [
 ]
 
 r_matcher = ReplaceMatcher(nlp, match_dict=match_dict)
+spans = r_matcher("They read us the stories they themselves had written.")
+suggestions = spans[0]._.suggestions
 
 
 def test_suggestions():
-    spans = r_matcher("They read us the stories they themselves had written.")
-    suggestions = spans[0]._.suggestions
-    assert all([a == b for a, b in zip(suggestions, output)])
+    assert set(suggestions) <= set(outputs)
