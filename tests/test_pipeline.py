@@ -18,7 +18,7 @@ match_dict = {
     },
     "hyuck-hyuck": {
         "patterns": [{"LOWER": "hyuck"}, {"LOWER": "hyuck"}],
-        "suggestions": [[{"TEXT": "ha"}]],
+        "suggestions": [[{"TEXT": "haha"}]],
         "test": {"positive": [], "negative": []},
     },
 }
