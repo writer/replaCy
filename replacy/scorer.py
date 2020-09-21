@@ -1,3 +1,5 @@
+from typing import List
+
 import os
 import string
 import warnings
@@ -94,7 +96,7 @@ class KenLMScorer(Scorer):
         text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
         return self(text)
 
-    def sort_suggestions(self, spans):
+    def sort_suggestions(self, spans: List[Span]) -> List[Span]:
         for span in spans:
             if len(span._.suggestions) > 1:
                 span._.suggestions = sorted(
@@ -103,3 +105,4 @@ class KenLMScorer(Scorer):
                         span.doc, span, [t.text for t in x]
                     ),
                 )
+        return spans

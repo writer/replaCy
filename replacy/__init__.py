@@ -28,6 +28,9 @@ from replacy.version import __version__
 logging.basicConfig(level=logging.INFO)
 
 
+PipelineComponent = Callable[[List[Span]], List[Span]]
+
+
 class ReplaceMatcher:
     """
     The main unit of functionality. Instantiate with `nlp`, (an instance of spaCy) and a match dict.
@@ -83,7 +86,7 @@ class ReplaceMatcher:
         self.novel_prop_defaults = get_novel_prop_defaults(self.match_dict)
         self._set_scorer(lm_path)
         # Pipeline doesn't include matcher, since doesn't have the signature List[Span] -> None
-        self.pipeline = [
+        self.pipeline: List[Tuple[str, PipelineComponent]] = [
             ("sorter", self.scorer.sort_suggestions),
             ("filter", self.max_count_filter),
             ("joiner", join_suggestions),
@@ -174,7 +177,7 @@ class ReplaceMatcher:
         else:
             self.scorer = Scorer()
 
-    def max_count_filter(self, spans: List[Span]):
+    def max_count_filter(self, spans: List[Span]) -> List[Span]:
         # for each span, reduce number of suggestions
         # based on max_count of each suggestion text item
         # assumption - elements are already sorted
@@ -206,6 +209,7 @@ class ReplaceMatcher:
                         self.logger.info(f"Ignored suggestions: {suggestions_diff}")
 
                 span._.suggestions = chosen
+        return spans
 
     def process_suggestions(
         self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
@@ -239,7 +243,7 @@ class ReplaceMatcher:
 
     def add_pipe(
         self,
-        component: Callable[[List[Span]], None],
+        component: PipelineComponent,
         name: str = None,
         before: str = None,
         after: str = None,
@@ -250,7 +254,9 @@ class ReplaceMatcher:
         Add a component to the pipeline
         A component must take one argument, a list of spans, and return None (modify the spans)
 
-        Optionally, specify the component's name and where in the pipeline it goes
+        Optionally, you can either specify a component to add it before or after,
+        tell replaCy to add it first or last in the pipeline, or define a custom name.
+        If no name is set and no name attribute is present on your component, the function/class name is used.
         """
         if not at_most_one_is_not_none(before, after, first, last):
             raise ValueError("Only one of before, after, first, last can be set")
@@ -309,7 +315,6 @@ class ReplaceMatcher:
             # sort suggestions by lm score
             # filter out based on max_count
             # merge lists of words into phrases
-            component(self.spans)
-            # this works because a component's signature is List[Span] -> None
-            # it modifies the list it is passed
+            self.spans = component(self.spans)
+            # this works because a component's signature is List[Span] -> List[Span]
         return self.spans

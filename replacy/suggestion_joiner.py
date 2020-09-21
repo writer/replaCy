@@ -3,7 +3,7 @@ from typing import List
 from spacy.tokens import Span
 
 
-def join_suggestions(spans: List[Span]):
+def join_suggestions(spans: List[Span]) -> List[Span]:
     for span in spans:
         suggestions: List[str] = []
         for s in span._.suggestions:
@@ -17,3 +17,4 @@ def join_suggestions(spans: List[Span]):
                 suggestions.append(s)
 
         span._.suggestions = suggestions
+    return spans

@@ -1,3 +1,8 @@
+from typing import List
+
+from spacy.tokens import Span
+
+
 class Scorer:
     def __init__(self):
         pass
@@ -11,6 +16,6 @@ class Scorer:
         text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
         return self(text)
 
-    def sort_suggestions(self, spans):
+    def sort_suggestions(self, spans: List[Span]) -> List[Span]:
         """Please override this"""
         return spans
