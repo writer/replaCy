@@ -8,7 +8,9 @@ from replacy.ref_matcher import RefMatcher
 
 
 class SuggestionGenerator:
-    def __init__(self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None):
+    def __init__(
+        self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None
+    ):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
         self.ref_matcher = RefMatcher(nlp)
@@ -79,7 +81,7 @@ class SuggestionGenerator:
         if max_count:
             return max_count
 
-        # can be soft set by default 
+        # can be soft set by default
         # but no more than possible - ex. list len
         # or maximal ie. list len
         if self.default_max_count:
@@ -92,7 +94,7 @@ class SuggestionGenerator:
         # end here
         if not self.filter_suggestions:
             return max_count
-        
+
         # if max count is not hard set
         # try to lower max count in special cases (A - G)
         # to eliminate non grammatical suggestions
@@ -141,7 +143,9 @@ class SuggestionGenerator:
             # G. irregular plurals - only 2 detected so hardcoded
             # person / people
             # ox / oxen
-            if all([el in item_options for el in ["person", "people"]]) or all([el in item_options for el in ["ox", "oxen"]]):
+            if all([el in item_options for el in ["person", "people"]]) or all(
+                [el in item_options for el in ["ox", "oxen"]]
+            ):
                 return 1
 
         return max_count
@@ -179,7 +183,7 @@ class SuggestionGenerator:
                 # get all forms
                 item_options = (
                     seq(item_options)
-                    .map(lambda x: inflector.inflect_or_lookup(x, pos=None))
+                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
                     .flatten()
                     .list()
                 )
@@ -273,7 +277,9 @@ class SuggestionGenerator:
 
             # if non empty (can be when matching with OP)
             if len(cased_options):
-                suggestion_variant = SuggestionVariants(cased_options, max_count, pre_suggestion_id)
+                suggestion_variant = SuggestionVariants(
+                    cased_options, max_count, pre_suggestion_id
+                )
                 suggestions.append(suggestion_variant)
 
         return suggestions
