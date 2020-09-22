@@ -1,3 +1,5 @@
+from typing import List
+
 import os
 import string
 import warnings
@@ -6,7 +8,10 @@ from kenlm import Model as KenLMModel
 from spacy.tokens import Doc, Span, Token
 
 
-class KenLMScorer:
+from replacy.default_scorer import Scorer
+
+
+class KenLMScorer(Scorer):
 
     name = "kenlm"
 
@@ -86,3 +91,18 @@ class KenLMScorer:
 
         else:
             raise NotImplementedError
+
+    def score_suggestion(self, doc, span, suggestion):
+        text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
+        return self(text)
+
+    def sort_suggestions(self, spans: List[Span]) -> List[Span]:
+        for span in spans:
+            if len(span._.suggestions) > 1:
+                span._.suggestions = sorted(
+                    span._.suggestions,
+                    key=lambda x: self.score_suggestion(
+                        span.doc, span, [t.text for t in x]
+                    ),
+                )
+        return spans
