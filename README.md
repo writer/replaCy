@@ -61,23 +61,6 @@ doc = nlp("She extracts revenge.")
 span = r_matcher(doc)[0]
 ```
 
-## Inflection library
-
-ReplaCy uses [LemmInflect](https://github.com/bjascob/LemmInflect) inflection module underhood.
-
-Speed and accuracy benchmark (copied from the Lemminflect repo):
-
-```sh
-| Package          | Verb  |  Noun | ADJ/ADV | Overall |  Speed  |
-|----------------------------------------------------------------|
-| LemmInflect      | 96.1% | 95.4% |  93.9%  |  95.6%  | 42.0 uS |
-| CLiPS/pattern.en | 93.6% | 91.1% |   0.0%  |  n/a    |  3.0 uS |
-| Stanford CoreNLP | 87.6% | 93.1% |   0.0%  |  n/a    |  n/a    |
-| spaCy            | 79.4% | 88.9% |  60.5%  |  84.7%  |  5.0 uS |
-| NLTK             | 53.3% | 52.2% |  53.3%  |  52.6%  | 13.0 uS |
-|----------------------------------------------------------------|
-```
-
 ## match_dict.json format
 
 Here is a minimal `match_dict.json`:
