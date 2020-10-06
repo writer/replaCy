@@ -79,16 +79,13 @@ class KenLMScorer(Scorer):
             bos = text.capitalize() == text
             eos = text[-1] in string.punctuation
 
-        # log10 prob
-        score = self.model.score(text, bos=bos, eos=eos)
 
         if score_type == "log":
+            # log10 prob
+            score = self.model.score(text, bos=bos, eos=eos)
             return score
-
         elif score_type == "perplexity":
-            prob = 10.0 ** (score)
-            return prob ** (-1 / word_count)
-
+            return self.model.perplexity(text)
         else:
             raise NotImplementedError
 
