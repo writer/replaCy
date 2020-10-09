@@ -50,7 +50,7 @@ class KenLMScorer(Scorer):
                 tok = [token.lower() for token in tok]
 
         elif isinstance(segment, str):
-            doc = self.nlp(segment, disable=["parser", "tagger", "ner"])
+            doc = self.nlp(segment, disable=self.nlp.pipe_names)
             return self.preprocess(doc)
 
         return " ".join(tok)
