@@ -92,8 +92,23 @@ class KenLMScorer(Scorer):
         else:
             raise NotImplementedError
 
-    def score_suggestion(self, doc, span, suggestion):
-        text = " ".join([doc[: span.start].text] + suggestion + [doc[span.end :].text])
+    def score_suggestion(self, doc: Doc, span: Span, suggestion: List[str]) -> float:
+        """
+        between spacy 2.3.2 and 2.3.5 the behavior of slicing docs changed
+        so doc[len(doc):] now throws an exception (it just returned the empty span before)
+
+        also, we use arrays of text tokens rather than t.text_with_ws_ because
+        Ken wants space-tokenized strings
+        """
+        if span.start == 0:
+            head = []
+        else:
+            head = [t.text for t in doc[: span.start]]
+        if span.end >= len(doc):
+            tail = []
+        else:
+            tail = [t.text for t in doc[span.end :]]
+        text = " ".join(head + suggestion + tail)
         return self(text)
 
     def sort_suggestions(self, spans: List[Span]) -> List[Span]:
