@@ -29,14 +29,14 @@ jobs:
           V_MINOR=${BASE_LIST[1]}
           V_PATCH=${BASE_LIST[2]}
           echo -e "Current version: $BASE_STRING"
-          echo "::set-env name=OLD_VERSION::$BASE_STRING"
+          echo "OLD_VERSION=$BASE_STRING" >> $GITHUB_ENV
           V_MINOR=$((V_MINOR + 1))
           V_PATCH=0
           SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
           echo "Bumping minor version in VERSION file"
           echo ""
           echo "$SUGGESTED_VERSION" > VERSION
-          echo "::set-env name=VERSION::$SUGGESTED_VERSION"
+          echo "VERSION=$SUGGESTED_VERSION" >> $GITHUB_ENV
       - name: create source dist
         if: github.ref == 'refs/heads/master'
         run: |
