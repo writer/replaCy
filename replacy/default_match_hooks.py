@@ -289,7 +289,7 @@ def succeeded_by_currency() -> SpacyMatchPredicate:
     def _succeeded_by_currency(doc, start, end):
         if end >= len(doc):
             return False
-        doc[end].is_currency
+        return doc[end].is_currency
 
     return _succeeded_by_currency
 
