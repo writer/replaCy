@@ -3,6 +3,7 @@ This module contains predicates which influence what counts as a match
 If the predicate (function) returns True, the match will be ignored
 """
 import operator
+import sys
 from typing import Callable, List, Union
 
 from spacy.tokens.doc import Doc
@@ -10,156 +11,160 @@ from spacy.tokens.doc import Doc
 SpacyMatchPredicate = Callable[[Doc, int, int], bool]
 
 
+def _check_args(x):
+    """
+    get calling function name to give a nice error message
+    """
+    caller = sys._getframe(1).f_code.co_name
+    if not isinstance(x, (list, str)):
+        raise ValueError(f"args of {caller} should be a string or list of strings")
+
+
 def compose(f, g):
     return lambda doc, start, end: f(g(doc, start, end))
 
 
 def neg(f):
-    # function negation, ex. neg(preceeded_by_pos(pos))
+    # function negation, ex. neg(preceded_by_pos(pos))
     return compose(operator.not_, f)
 
 
-def succeeded_by_phrase(phrase) -> SpacyMatchPredicate:
-    if isinstance(phrase, list):
-        phrase_list = phrase
+def succeeded_by_phrase(phrases) -> SpacyMatchPredicate:
+    _check_args(phrases)
+    if not isinstance(phrases, list):
+        phrases = [phrases]
 
-        def _succeeded_by_phrase(doc, start, end):
-            bools = [doc[end:].text.lower().startswith(p.lower()) for p in phrase_list]
-            return any(bools)
+    def _succeeded_by_phrase(doc, start, end):
+        if end >= len(doc):
+            return False
+        return any([doc[end:].text.lower().startswith(p.lower()) for p in phrases])
 
-        return _succeeded_by_phrase
-    elif isinstance(phrase, str):
-        return lambda doc, start, end: doc[end:].text.lower().startswith(phrase.lower())
-    else:
-        raise ValueError(
-            "args of succeeded_by_phrase should be a string or list of strings"
-        )
+    return _succeeded_by_phrase
 
 
-def preceded_by_phrase(phrase) -> SpacyMatchPredicate:
-    if isinstance(phrase, list):
-        phrase_list = phrase
+def preceded_by_phrase(phrases) -> SpacyMatchPredicate:
+    _check_args(phrases)
+    if not isinstance(phrases, list):
+        phrases = [phrases]
 
-        def _preceded_by_phrase(doc, start, end):
-            bools = [doc[:start].text.lower().endswith(p.lower()) for p in phrase_list]
-            return any(bools)
+    def _preceded_by_phrase(doc, start, end):
+        if start <= 0:
+            return False
+        return any([doc[:start].text.lower().endswith(p.lower()) for p in phrases])
 
-        return _preceded_by_phrase
-    elif isinstance(phrase, str):
-        return lambda doc, start, end: doc[:start].text.lower().endswith(phrase.lower())
-    else:
-        raise ValueError(
-            "args of preceded_by_phrase should be a string or list of strings"
-        )
+    return _preceded_by_phrase
 
 
 def succeeded_by_pos(pos) -> SpacyMatchPredicate:
-    if isinstance(pos, list):
-        pos_list = pos
+    _check_args(pos)
+    if not isinstance(pos, list):
+        pos = [pos]
 
-        def _succeeded_by_pos(doc, start, end):
-            bools = [doc[end].pos_ == p for p in pos_list]
-            return any(bools)
+    def _succeeded_by_pos(doc, start, end):
+        if end >= len(doc):
+            return False
+        bools = [doc[end].pos_ == p for p in pos]
+        return any(bools)
 
-        return _succeeded_by_pos
-    elif isinstance(pos, str):
-        return lambda doc, start, end: doc[end].pos_ == pos
-    else:
-        raise ValueError(
-            "args of succeeded_by_pos should be a string or list of strings"
-        )
+    return _succeeded_by_pos
 
 
 def preceded_by_pos(pos) -> SpacyMatchPredicate:
-    if isinstance(pos, list):
-        pos_list = pos
+    _check_args(pos)
+    if not isinstance(pos, list):
+        pos = [pos]
 
-        def _preceded_by_pos(doc, start, end):
-            bools = [doc[start - 1].pos_ == p for p in pos_list]
-            return any(bools)
+    def _preceded_by_pos(doc, start, end):
+        if start <= 0:
+            return False
+        bools = [doc[start - 1].pos_ == p for p in pos]
+        return any(bools)
 
-        return _preceded_by_pos
-    elif isinstance(pos, str):
-        return lambda doc, start, end: doc[start - 1].pos_ == pos
-    else:
-        raise ValueError(
-            "args of preceded_by_pos should be a string or list of strings"
-        )
+    return _preceded_by_pos
 
 
 def succeeded_by_lemma(lemma) -> SpacyMatchPredicate:
-    if isinstance(lemma, list):
-        lemma_list = lemma
+    _check_args(lemma)
+    if not isinstance(lemma, list):
+        lemma = [lemma]
 
-        def _succeeded_by_lemma(doc, start, end):
-            bools = [doc[end].lemma_ == l for l in lemma_list]
-            return any(bools)
+    def _succeeded_by_lemma(doc, start, end):
+        if end >= len(doc):
+            return False
+        bools = [doc[end].lemma_ == l for l in lemma]
+        return any(bools)
 
-        return _succeeded_by_lemma
-    elif isinstance(lemma, str):
-        return lambda doc, start, end: doc[end].lemma_ == lemma
-    else:
-        raise ValueError(
-            "args of succeeded_by_lemma should be a string or list of strings"
-        )
+    return _succeeded_by_lemma
 
 
 def preceded_by_lemma(lemma, distance=1) -> SpacyMatchPredicate:
-    if isinstance(lemma, list):
-        lemma_list = lemma
+    _check_args(lemma)
+    if not isinstance(lemma, list):
+        lemma = [lemma]
 
-        def _preceded_by_lemma(doc, start, end):
-            bools = [doc[start - distance].lemma_ == l for l in lemma_list]
-            return any(bools)
+    def _preceded_by_lemma(doc, start, end):
+        if start < distance:
+            return False
+        bools = [doc[start - distance].lemma_ == l for l in lemma]
+        return any(bools)
 
-        return _preceded_by_lemma
-    elif isinstance(lemma, str):
-        return lambda doc, start, end: doc[start - distance].lemma_ == lemma
-    else:
-        raise ValueError(
-            "args of preceded_by_lemma should be a string or list of strings"
-        )
+    return _preceded_by_lemma
 
 
 def succeeded_by_dep(dep) -> SpacyMatchPredicate:
-    if isinstance(dep, list):
-        dep_list = dep
+    _check_args(dep)
+    if not isinstance(dep, list):
+        dep = [dep]
 
-        def _succeeded_by_dep(doc, start, end):
-            bools = [doc[end].dep_ == d for d in dep_list]
-            return any(bools)
+    def _succeeded_by_dep(doc, start, end):
+        if end >= len(doc):
+            return False
+        bools = [doc[end].dep_ == d for d in dep]
+        return any(bools)
 
-        return _succeeded_by_dep
-    elif isinstance(dep, str):
-        return lambda doc, start, end: doc[end].dep_ == dep
-    else:
-        raise ValueError(
-            "args of succeeded_by_dep should be a string or list of strings"
-        )
+    return _succeeded_by_dep
 
 
 def preceded_by_dep(dep) -> SpacyMatchPredicate:
-    if isinstance(dep, list):
-        dep_list = dep
+    _check_args(dep)
+    if not isinstance(dep, list):
+        dep = [dep]
 
-        def _preceded_by_dep(doc, start, end):
-            bools = [doc[start - 1].dep_ == d for d in dep_list]
-            return any(bools)
+    def _preceded_by_dep(doc, start, end):
+        if start <= 0:
+            return False
+        bools = [doc[start - 1].dep_ == d for d in dep]
+        return any(bools)
 
-        return _preceded_by_dep
-    elif isinstance(dep, str):
-        return lambda doc, start, end: doc[start - 1].dep_ == dep
-    else:
-        raise ValueError(
-            "args of preceded_by_dep should be a string or list of strings"
-        )
+    return _preceded_by_dep
+
+
+def sentence_has(phrases) -> SpacyMatchPredicate:
+    _check_args(phrases)
+    if not isinstance(phrases, list):
+        phrases = [phrases]
+
+    def _sentence_has(doc, start, end):
+        sents = list(doc.sents)
+        totalnum = 0
+        sentnum = 0
+        for sent in sents:
+            totalnum += len(sent)
+            if start > totalnum - 1:
+                sentnum += 1
+        bools = [p in sents[sentnum].text.lower() for p in phrases]
+        return any(bools)
+
+    return _sentence_has
 
 
 def surrounded_by_phrase(phrase) -> SpacyMatchPredicate:
     def _surrounded_by_hook(doc, start, end):
-        preceeds = doc[:start].text.lower().endswith(phrase.lower())
+        if start <= 0 or end >= len(doc):
+            return False
+        precedes = doc[:start].text.lower().endswith(phrase.lower())
         follows = doc[end:].text.lower().startswith(phrase.lower())
-        return preceeds and follows
+        return precedes and follows
 
     return _surrounded_by_hook
 
@@ -251,39 +256,6 @@ def relative_x_is_y(
     return _relatives_x_is_y
 
 
-def sentence_has(phrase) -> SpacyMatchPredicate:
-    if isinstance(phrase, list):
-        phrase_list = phrase
-
-        def _sentence_has(doc, start, end):
-            sents = list(doc.sents)
-            totalnum = 0
-            sentnum = 0
-            for sent in sents:
-                totalnum += len(sent)
-                if start > totalnum - 1:
-                    sentnum += 1
-            bools = [p in sents[sentnum].text.lower() for p in phrase_list]
-            return any(bools)
-
-        return _sentence_has
-    elif isinstance(phrase, str):
-
-        def _sentence_has(doc, start, end):
-            sents = list(doc.sents)
-            totalnum = 0
-            sentnum = 0
-            for sent in sents:
-                totalnum += len(sent)
-                if start > totalnum - 1:
-                    sentnum += 1
-            return phrase in sents[sentnum].text.lower()
-
-        return _sentence_has
-    else:
-        raise ValueError("args of sentence_has should be a string or list of strings")
-
-
 def part_of_phrase(phrase) -> SpacyMatchPredicate:
     def _part_of_phrase(doc, start, end):
         matched = doc[start:end].text.lower()
@@ -295,9 +267,9 @@ def part_of_phrase(phrase) -> SpacyMatchPredicate:
                 firstpart += part
             for part in parts[i + 1 :]:
                 secondpart += part
-            preceeds = doc.text.lower()[: doc[start:end].start_char].endswith(firstpart)
+            precedes = doc.text.lower()[: doc[start:end].start_char].endswith(firstpart)
             follows = doc.text.lower()[doc[start:end].end_char :].startswith(secondpart)
-            if preceeds and follows:
+            if precedes and follows:
                 return True
         return False
 
@@ -305,18 +277,24 @@ def part_of_phrase(phrase) -> SpacyMatchPredicate:
 
 
 def succeeded_by_num() -> SpacyMatchPredicate:
-    return (
-        lambda doc, start, end: doc[end].like_num
-        or doc[end].pos_ == "NUM"
-        or doc[end].is_digit
-    )
+    def _succeeded_by_num(doc, start, end):
+        if end >= len(doc):
+            return False
+        return doc[end].like_num or doc[end].pos_ == "NUM" or doc[end].is_digit
+
+    return _succeeded_by_num
 
 
 def succeeded_by_currency() -> SpacyMatchPredicate:
-    return lambda doc, start, end: doc[end].is_currency
+    def _succeeded_by_currency(doc, start, end):
+        if end >= len(doc):
+            return False
+        doc[end].is_currency
+
+    return _succeeded_by_currency
 
 
-# for compatibilty with a previous version with spelling errors
+# for compatibility with a previous version with spelling errors
 # point incorrectly spelled versions to correct versions
 # eventually deprecate these
 preceeded_by_phrase = preceded_by_phrase
