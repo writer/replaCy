@@ -91,8 +91,10 @@ class ReplaceMatcher:
             filter_suggestions=False,
             default_max_count=None,
             debug=False,
+            extended_span=False
     ):
         self.debug = debug
+        self.extended_span = extended_span
         self.logger = logging.getLogger("replaCy")
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -165,7 +167,7 @@ class ReplaceMatcher:
                 except IndexError:
                     break
             match_name = self.nlp.vocab[match_id].text
-            span = ESpan.create_instance(doc, start, end)
+            span = ESpan.create_instance(doc, start, end) if self.extended_span else Span(doc, start, end)
 
             # find in match_dict if needed
             span._.match_name = match_name
@@ -191,14 +193,15 @@ class ReplaceMatcher:
                     self.match_dict[match_name].get(novel_prop, default_value),
                 )
 
-            span.match_name = span._.match_name
-            span.description = span._.description
-            span.category = span._.category
-            span.subcategory = span._.subcategory
-            span.suggestions = span._.suggestions
-            span.suggestions_separator = span._.suggestions_separator
-            span.construct_suggestion_function = span._.construct_suggestion_function
-            # todo check with Sam if `match_dict` contains more
+            if self.extended_span:
+                span.match_name = span._.match_name
+                span.description = span._.description
+                span.category = span._.category
+                span.subcategory = span._.subcategory
+                span.suggestions = span._.suggestions
+                span.suggestions_separator = span._.suggestions_separator
+                span.construct_suggestion_function = span._.construct_suggestion_function
+
             self.spans.append(span)
 
         return cb
