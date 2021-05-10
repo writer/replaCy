@@ -2,12 +2,11 @@ import copy
 import itertools
 import logging
 import warnings
-from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple
-
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
+from types import ModuleType
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -24,11 +23,36 @@ from replacy.util import (
 )
 from replacy.version import __version__
 
-
 logging.basicConfig(level=logging.INFO)
 
-
 PipelineComponent = Callable[[List[Span]], List[Span]]
+
+
+class ESpan(Span):
+    match_name = None
+    description = None
+    category = None
+    subcategory = None
+    suggestions = []
+    suggestions_separator = None
+    construct_suggestion_function = None
+    score = 0
+    learn_more = ""
+    issue_type = None
+    simple_description = ""
+    paragraph = False
+    header = ""
+    meta_dict = {}
+    accept_all_changes = False
+    debug = False
+    segment = None
+    visible = True
+
+    @staticmethod
+    def create_instance(doc, start, end):
+        span = Span(doc, start, end)
+        espan = ESpan(span.doc, span.start, span.end, span.label, span.vector, span.vector_norm, span.kb_id)
+        return espan
 
 
 class ReplaceMatcher:
@@ -56,17 +80,17 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-        self,
-        nlp,
-        match_dict=None,
-        forms_lookup=None,
-        custom_match_hooks: Optional[ModuleType] = None,
-        allow_multiple_whitespaces=False,
-        max_suggestions_count=1000,
-        lm_path=None,
-        filter_suggestions=False,
-        default_max_count=None,
-        debug=False,
+            self,
+            nlp,
+            match_dict=None,
+            forms_lookup=None,
+            custom_match_hooks: Optional[ModuleType] = None,
+            allow_multiple_whitespaces=False,
+            max_suggestions_count=1000,
+            lm_path=None,
+            filter_suggestions=False,
+            default_max_count=None,
+            debug=False,
     ):
         self.debug = debug
         self.logger = logging.getLogger("replaCy")
@@ -141,7 +165,7 @@ class ReplaceMatcher:
                 except IndexError:
                     break
             match_name = self.nlp.vocab[match_id].text
-            span = Span(doc, start, end)
+            span = ESpan.create_instance(doc, start, end)
 
             # find in match_dict if needed
             span._.match_name = match_name
@@ -157,12 +181,24 @@ class ReplaceMatcher:
 
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
+            span._.subcategory = self.match_dict[match_name].get("subcategory", "")
+            span._.suggestions_separator = self.match_dict[match_name].get("suggestions_separator", " ")
+            span._.construct_suggestion_function = self.match_dict[match_name].get("construct_suggestion_function", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
                     span._,
                     novel_prop,
                     self.match_dict[match_name].get(novel_prop, default_value),
                 )
+
+            span.match_name = span._.match_name
+            span.description = span._.description
+            span.category = span._.category
+            span.subcategory = span._.subcategory
+            span.suggestions = span._.suggestions
+            span.suggestions_separator = span._.suggestions_separator
+            span.construct_suggestion_function = span._.construct_suggestion_function
+            # todo check with Sam if `match_dict` contains more
             self.spans.append(span)
 
         return cb
@@ -212,7 +248,7 @@ class ReplaceMatcher:
         return spans
 
     def process_suggestions(
-        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
+            self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
     ):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
@@ -242,13 +278,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-        self,
-        component: PipelineComponent,
-        name: str = None,
-        before: str = None,
-        after: str = None,
-        first: bool = None,
-        last: bool = None,
+            self,
+            component: PipelineComponent,
+            name: str = None,
+            before: str = None,
+            after: str = None,
+            first: bool = None,
+            last: bool = None,
     ):
         """
         Add a component to the pipeline
