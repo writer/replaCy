@@ -135,6 +135,10 @@ class ReplaceMatcher:
             ("joiner", join_suggestions),
         ]
 
+    @classmethod
+    def with_espan(cls, *args, **kwargs):
+        return cls(*args, **kwargs, SpanClass=ESpan)
+
     def _init_matcher(self):
         for match_name, ps in self.match_dict.items():
             patterns = copy.deepcopy(ps["patterns"])
