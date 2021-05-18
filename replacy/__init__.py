@@ -2,12 +2,13 @@ import copy
 import itertools
 import logging
 import warnings
+from types import ModuleType
+from typing import Callable, List, Optional, Tuple
+
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.tokens.underscore import get_ext_args
-from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -197,15 +198,6 @@ class ReplaceMatcher:
                     x, doc, start, end, match_name, i
                 )
 
-            span._.description = self.match_dict[match_name].get("description", "")
-            span._.category = self.match_dict[match_name].get("category", "")
-            span._.subcategory = self.match_dict[match_name].get("subcategory", "")
-            span._.suggestions_separator = self.match_dict[match_name].get(
-                "suggestions_separator", " "
-            )
-            span._.construct_suggestion_function = self.match_dict[match_name].get(
-                "construct_suggestion_function", ""
-            )
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
                     span._,
