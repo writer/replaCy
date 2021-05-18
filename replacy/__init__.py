@@ -5,6 +5,7 @@ import warnings
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
+from spacy.tokens.underscore import get_ext_args
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -19,6 +20,7 @@ from replacy.util import (
     get_novel_prop_defaults,
     get_predicates,
     make_doc_if_not_doc,
+    set_known_extensions,
     validate_match_dict,
 )
 from replacy.version import __version__
@@ -29,30 +31,40 @@ PipelineComponent = Callable[[List[Span]], List[Span]]
 
 
 class ESpan(Span):
-    match_name = None
-    description = None
-    category = None
-    subcategory = None
-    suggestions = []
-    suggestions_separator = None
-    construct_suggestion_function = None
-    score = 0
-    learn_more = ""
-    issue_type = None
-    simple_description = ""
-    paragraph = False
-    header = ""
-    meta_dict = {}
-    accept_all_changes = False
-    debug = False
-    segment = None
-    visible = True
+    """
+    dangerous version of Span class
+    intentionally bypass the _ attribute so that the class itself has all the properties
+    this can result in name collisions, etc
 
-    @staticmethod
-    def create_instance(doc, start, end):
-        span = Span(doc, start, end)
-        espan = ESpan(span.doc, span.start, span.end, span.label, span.vector, span.vector_norm, span.kb_id)
-        return espan
+    Why use it? there are cases where overlapping spans cause problems for the built in spacy.tokens.Span
+    but for some reason this works
+    """
+
+    def __getattribute__(self, name):
+        """
+        when python attempts to access to underscore property, don't let it, give it self
+        this means that:
+
+        ```python
+        >>> doc = nlp("She extracts revenge.")
+        >>> es = ESpan(doc, 1, 2)
+        >>> e._.comment = "yo metaprogramming"
+        >>> e.comment
+        'yo metaprogramming'
+        ```
+        """
+        if name == "_":
+            return self
+        return super().__getattribute__(name)
+
+    @classmethod
+    def set_extension(cls, name, **kwargs):
+        # if we only want to allow default values, this works:
+        default, method, getter, setter = get_ext_args(**kwargs)
+        setattr(cls, name, default)
+        # if we want to allow getters and setters or methods for dynamic props, we have to implement that
+        # I think it is doable using the `property` built-in method as shown here
+        # https://stackoverflow.com/a/1355444/3518108
 
 
 class ReplaceMatcher:
@@ -80,21 +92,22 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-            self,
-            nlp,
-            match_dict=None,
-            forms_lookup=None,
-            custom_match_hooks: Optional[ModuleType] = None,
-            allow_multiple_whitespaces=False,
-            max_suggestions_count=1000,
-            lm_path=None,
-            filter_suggestions=False,
-            default_max_count=None,
-            debug=False,
-            extended_span=False
+        self,
+        nlp,
+        match_dict=None,
+        forms_lookup=None,
+        custom_match_hooks: Optional[ModuleType] = None,
+        allow_multiple_whitespaces=False,
+        max_suggestions_count=1000,
+        lm_path=None,
+        filter_suggestions=False,
+        default_max_count=None,
+        debug=False,
+        SpanClass=Span,
     ):
         self.debug = debug
-        self.extended_span = extended_span
+        # self.extended_span = extended_span
+        self.Span = SpanClass
         self.logger = logging.getLogger("replaCy")
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -109,7 +122,10 @@ class ReplaceMatcher:
         self.suggestion_gen = SuggestionGenerator(
             nlp, forms_lookup, filter_suggestions, default_max_count
         )
-        self.novel_prop_defaults = get_novel_prop_defaults(self.match_dict)
+        expected_properties = set_known_extensions(self.Span)
+        self.novel_prop_defaults = get_novel_prop_defaults(
+            self.match_dict, self.Span, expected_properties
+        )
         self._set_scorer(lm_path)
         # Pipeline doesn't include matcher, since doesn't have the signature List[Span] -> None
         self.pipeline: List[Tuple[str, PipelineComponent]] = [
@@ -167,7 +183,7 @@ class ReplaceMatcher:
                 except IndexError:
                     break
             match_name = self.nlp.vocab[match_id].text
-            span = ESpan.create_instance(doc, start, end) if self.extended_span else Span(doc, start, end)
+            span = self.Span(doc, start, end)
 
             # find in match_dict if needed
             span._.match_name = match_name
@@ -184,24 +200,18 @@ class ReplaceMatcher:
             span._.description = self.match_dict[match_name].get("description", "")
             span._.category = self.match_dict[match_name].get("category", "")
             span._.subcategory = self.match_dict[match_name].get("subcategory", "")
-            span._.suggestions_separator = self.match_dict[match_name].get("suggestions_separator", " ")
-            span._.construct_suggestion_function = self.match_dict[match_name].get("construct_suggestion_function", "")
+            span._.suggestions_separator = self.match_dict[match_name].get(
+                "suggestions_separator", " "
+            )
+            span._.construct_suggestion_function = self.match_dict[match_name].get(
+                "construct_suggestion_function", ""
+            )
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
                     span._,
                     novel_prop,
                     self.match_dict[match_name].get(novel_prop, default_value),
                 )
-
-            if self.extended_span:
-                span.match_name = span._.match_name
-                span.description = span._.description
-                span.category = span._.category
-                span.subcategory = span._.subcategory
-                span.suggestions = span._.suggestions
-                span.suggestions_separator = span._.suggestions_separator
-                span.construct_suggestion_function = span._.construct_suggestion_function
-
             self.spans.append(span)
 
         return cb
@@ -251,7 +261,7 @@ class ReplaceMatcher:
         return spans
 
     def process_suggestions(
-            self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
+        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
     ):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
@@ -281,13 +291,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-            self,
-            component: PipelineComponent,
-            name: str = None,
-            before: str = None,
-            after: str = None,
-            first: bool = None,
-            last: bool = None,
+        self,
+        component: PipelineComponent,
+        name: str = None,
+        before: str = None,
+        after: str = None,
+        first: bool = None,
+        last: bool = None,
     ):
         """
         Add a component to the pipeline

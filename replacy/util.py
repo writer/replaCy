@@ -7,30 +7,40 @@ from spacy.tokens import Doc, Span
 
 from replacy.db import get_match_dict_schema
 
-# set known extensions:
-known_string_extensions = ["description", "match_name", "category", "subcategory", "comment", "suggestions_separator",
-                           "construct_suggestion_function"]
-known_list_extensions = ["suggestions"]
-for ext in known_list_extensions:
-    Span.set_extension(ext, default=[], force=True)
-for ext in known_string_extensions:
-    Span.set_extension(ext, default="", force=True)
 
-expected_properties = (
-        ["patterns", "match_hook", "test"] + known_list_extensions + known_string_extensions
-)
+def set_known_extensions(span_class):
+    known_string_extensions = [
+        "description",
+        "match_name",
+        "category",
+        "subcategory",
+        "comment",
+        "suggestions_separator",
+        "construct_suggestion_function",
+    ]
+    known_list_extensions = ["suggestions"]
+    for ext in known_list_extensions:
+        span_class.set_extension(ext, default=[], force=True)
+    for ext in known_string_extensions:
+        span_class.set_extension(ext, default="", force=True)
+    expected_properties = (
+        ["patterns", "match_hook", "test"]
+        + known_list_extensions
+        + known_string_extensions
+    )
+    return expected_properties
 
 
 # set custom extensions for any unexpected keys found in the match_dict
-def get_novel_prop_defaults(match_dict):
+def get_novel_prop_defaults(match_dict, span_class, expected_properties):
     """
     Also mutates the global Span to add any needed extensions
     """
     novel_properties = (
         seq(match_dict.values())
-            .flat_map(lambda x: x.keys())
-            .distinct()
-            .difference(expected_properties)
+        .flat_map(lambda x: x.keys())
+        .distinct()
+        .difference(expected_properties)
     )
     novel_prop_defaults: Dict[str, Any] = {}
     for x in match_dict.values():
@@ -53,7 +63,7 @@ def get_novel_prop_defaults(match_dict):
                     print(k, v)
                     novel_prop_defaults[k] = v
     for prop, default in novel_prop_defaults.items():
-        Span.set_extension(prop, default=default, force=True)
+        span_class.set_extension(prop, default=default, force=True)
     return novel_prop_defaults
 
 
@@ -108,7 +118,7 @@ def eliminate_options(elem, chosen, rest):
 
 
 def get_predicates(
-        match_hooks, default_match_hooks, custom_match_hooks
+    match_hooks, default_match_hooks, custom_match_hooks
 ) -> List[Callable]:
     predicates = []
     for hook in match_hooks:
