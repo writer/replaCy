@@ -26,7 +26,7 @@ def set_known_extensions(span_class):
 # set custom extensions for any unexpected keys found in the match_dict
 def get_novel_prop_defaults(match_dict, span_class, expected_properties):
     """
-    Also mutates the global Span to add any needed extensions
+    Also mutates the ~global Span~ passed `span_class` to add any needed extensions
     """
     novel_properties = (
         seq(match_dict.values())
