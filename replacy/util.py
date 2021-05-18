@@ -9,15 +9,7 @@ from replacy.db import get_match_dict_schema
 
 
 def set_known_extensions(span_class):
-    known_string_extensions = [
-        "description",
-        "match_name",
-        "category",
-        "subcategory",
-        "comment",
-        "suggestions_separator",
-        "construct_suggestion_function",
-    ]
+    known_string_extensions = ["match_name"]
     known_list_extensions = ["suggestions"]
     for ext in known_list_extensions:
         span_class.set_extension(ext, default=[], force=True)
