@@ -3,11 +3,12 @@ import itertools
 import logging
 import warnings
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
+from spacy.tokens.underscore import get_ext_args
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -20,15 +21,55 @@ from replacy.util import (
     get_novel_prop_defaults,
     get_predicates,
     make_doc_if_not_doc,
+    set_known_extensions,
     validate_match_dict,
 )
 from replacy.version import __version__
 
-
 logging.basicConfig(level=logging.INFO)
 
-
 PipelineComponent = Callable[[List[Span]], List[Span]]
+
+
+class ESpan(Span):
+    """
+    dangerous version of Span class
+    intentionally bypass the _ attribute so that the class itself has all the properties
+    this can result in name collisions, etc
+
+    Why use it? there are cases where overlapping spans cause problems for the built in spacy.tokens.Span
+    but for some reason this works
+    """
+
+    def __getattribute__(self, name):
+        """
+        when python attempts to access to underscore property, don't let it, give it self
+        this means that:
+
+        ```python
+        >>> doc = nlp("She extracts revenge.")
+        >>> es = ESpan(doc, 1, 2)
+        >>> e._.comment = "yo metaprogramming"
+        >>> e.comment
+        'yo metaprogramming'
+        ```
+        """
+        if name == "_":
+            return self
+        return super().__getattribute__(name)
+
+    @classmethod
+    def set_extension(cls, name, **kwargs):
+        # if we only want to allow default values, this works:
+        default, method, getter, setter = get_ext_args(**kwargs)
+        setattr(cls, name, default)
+        # if we want to allow getters and setters or methods for dynamic props, we have to implement that
+        # I think it is doable using the `property` built-in method as shown here
+        # https://stackoverflow.com/a/1355444/3518108
+
+    @classmethod
+    def has_extension(cls, name):
+        return hasattr(cls, name)
 
 
 class ReplaceMatcher:
@@ -67,8 +108,11 @@ class ReplaceMatcher:
         filter_suggestions=False,
         default_max_count=None,
         debug=False,
+        SpanClass=Span,
     ):
         self.debug = debug
+        # self.extended_span = extended_span
+        self.Span = SpanClass
         self.logger = logging.getLogger("replaCy")
         self.default_match_hooks = default_match_hooks
         self.custom_match_hooks = custom_match_hooks
@@ -83,7 +127,10 @@ class ReplaceMatcher:
         self.suggestion_gen = SuggestionGenerator(
             nlp, forms_lookup, filter_suggestions, default_max_count
         )
-        self.novel_prop_defaults = get_novel_prop_defaults(self.match_dict)
+        expected_properties = set_known_extensions(self.Span)
+        self.novel_prop_defaults = get_novel_prop_defaults(
+            self.match_dict, self.Span, expected_properties
+        )
         self._set_scorer(lm_path)
         # Pipeline doesn't include matcher, since doesn't have the signature List[Span] -> None
         self.pipeline: List[Tuple[str, PipelineComponent]] = [
@@ -91,6 +138,10 @@ class ReplaceMatcher:
             ("filter", self.max_count_filter),
             ("joiner", join_suggestions),
         ]
+
+    @classmethod
+    def with_espan(cls, *args, **kwargs):
+        return cls(*args, **kwargs, SpanClass=ESpan)
 
     def _init_matcher(self):
         for match_name, ps in self.match_dict.items():
@@ -141,7 +192,7 @@ class ReplaceMatcher:
                 except IndexError:
                     break
             match_name = self.nlp.vocab[match_id].text
-            span = Span(doc, start, end)
+            span = self.Span(doc, start, end)
 
             # find in match_dict if needed
             span._.match_name = match_name
@@ -155,8 +206,6 @@ class ReplaceMatcher:
                     x, doc, start, end, match_name, i
                 )
 
-            span._.description = self.match_dict[match_name].get("description", "")
-            span._.category = self.match_dict[match_name].get("category", "")
             for novel_prop, default_value in self.novel_prop_defaults.items():
                 setattr(
                     span._,
