@@ -67,6 +67,10 @@ class ESpan(Span):
         # I think it is doable using the `property` built-in method as shown here
         # https://stackoverflow.com/a/1355444/3518108
 
+    @classmethod
+    def has_extension(cls, name):
+        return hasattr(cls, name)
+
 
 class ReplaceMatcher:
     """
