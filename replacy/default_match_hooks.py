@@ -294,6 +294,20 @@ def succeeded_by_currency() -> SpacyMatchPredicate:
     return _succeeded_by_currency
 
 
+def debug_hook(match_name: str) -> SpacyMatchPredicate:
+    """
+    Don't use this manually.
+    if debug is set (i.e. ReplaceMatcher.debug), then run utils.attach_debug_hook on your match_dict when you load it
+    it will return a new match_dict with the debug hook attached to each match
+    """
+    def _print_match(doc: Doc, start: int, end: int):
+        print(f"DEBUG:    {match_name} matched '{doc[start : end].text}'    token indices {start}:{end}")
+        return True
+    return _print_match
+
+
+
+
 # for compatibility with a previous version with spelling errors
 # point incorrectly spelled versions to correct versions
 # eventually deprecate these
