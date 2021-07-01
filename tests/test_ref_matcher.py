@@ -13,7 +13,7 @@ match_dict = {
             {"POS": "NOUN"},
             {"LEMMA": "be", "TEMPLATE_ID": 1},
             {"LEMMA": "deliver"},
-            {"OP": "*"},
+            {"IS_PUNCT": False, "OP": "*"},
             {"IS_PUNCT": True},
         ],
         "suggestions": [

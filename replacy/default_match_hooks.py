@@ -3,6 +3,7 @@ This module contains predicates which influence what counts as a match
 If the predicate (function) returns True, the match will be ignored
 """
 import operator
+import re
 import sys
 from typing import Callable, List, Union
 
@@ -182,11 +183,11 @@ def part_of_compound() -> SpacyMatchPredicate:
 
 
 def relative_x_is_y(
-    children_or_ancestors: str,
-    pos_or_dep: str,
-    value: str,
-    text: Union[str, List] = None,
-    lemma: Union[str, List] = None,
+        children_or_ancestors: str,
+        pos_or_dep: str,
+        value: str,
+        text: Union[str, List] = None,
+        lemma: Union[str, List] = None,
 ) -> SpacyMatchPredicate:
     """
     This is a buggy, half-implementation of a DependencyMatcher, eventually
@@ -265,10 +266,10 @@ def part_of_phrase(phrase) -> SpacyMatchPredicate:
             secondpart = ""
             for part in parts[: i - 1]:
                 firstpart += part
-            for part in parts[i + 1 :]:
+            for part in parts[i + 1:]:
                 secondpart += part
             precedes = doc.text.lower()[: doc[start:end].start_char].endswith(firstpart)
-            follows = doc.text.lower()[doc[start:end].end_char :].startswith(secondpart)
+            follows = doc.text.lower()[doc[start:end].end_char:].startswith(secondpart)
             if precedes and follows:
                 return True
         return False
@@ -292,6 +293,174 @@ def succeeded_by_currency() -> SpacyMatchPredicate:
         return doc[end].is_currency
 
     return _succeeded_by_currency
+
+
+def debug_hook(match_name: str) -> SpacyMatchPredicate:
+    """
+    Don't use this manually.
+    if debug is set (i.e. ReplaceMatcher.debug), then run utils.attach_debug_hook on your match_dict when you load it
+    it will return a new match_dict with the debug hook attached to each match
+    """
+
+    def _print_match(doc: Doc, start: int, end: int):
+        print(f"DEBUG:    {match_name} matched '{doc[start: end].text}'    token indices {start}:{end}")
+        return True
+
+    return _print_match
+
+
+def preceded_by_space() -> SpacyMatchPredicate:
+    def _preceded_by_space(doc, start, end):
+        span = doc[start:end]
+        return doc.text[span.start_char - 1] == ' '
+
+    return _preceded_by_space
+
+
+def preceded_by_punct() -> SpacyMatchPredicate:
+    def _preceded_by_punct(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        return previous_token.is_punct
+
+    return _preceded_by_punct
+
+
+def preceded_by_num() -> SpacyMatchPredicate:
+    def _preceded_by_number(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        return previous_token.like_num or previous_token.pos_ == "NUM" or previous_token.is_digit
+
+    return _preceded_by_number
+
+
+def preceded_by_currency() -> SpacyMatchPredicate:
+    def _preceded_by_currency(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        return previous_token.is_currency
+
+    return _preceded_by_currency
+
+
+def preceded_by_token(token) -> SpacyMatchPredicate:
+    token_list = token if isinstance(token, list) else [token]
+
+    def _preceded_by_token(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        return any([previous_token.lower_ == t.lower() for t in token_list])
+
+    return _preceded_by_token
+
+
+def succeeded_by_token(token) -> SpacyMatchPredicate:
+    token_list = token if isinstance(token, list) else [token]
+
+    def _succeeded_by_token(doc, start, end):
+        if end == len(doc):
+            return False
+        next_token = doc[end]
+        return any([next_token.lower_ == t.lower() for t in token_list])
+
+    return _succeeded_by_token
+
+
+def preceded_by_tag(tag) -> SpacyMatchPredicate:
+    tag_list = tag if isinstance(tag, list) else [tag]
+
+    def _preceded_by_tag(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        return any([previous_token.tag_ == t for t in tag_list])
+
+    return _preceded_by_tag
+
+
+def preceded_by_regex(regex, sensitive=False) -> SpacyMatchPredicate:
+    def _preceded_by_regex(doc, start, end):
+        if start == 0:
+            return False
+        previous_token = doc[start - 1]
+        flags = 0 if sensitive == True else re.IGNORECASE
+        return re.search(regex, previous_token.text, flags) is not None
+
+    return _preceded_by_regex
+
+
+def succeeded_by_tag(tag) -> SpacyMatchPredicate:
+    tag_list = tag if isinstance(tag, list) else [tag]
+
+    def _succeeded_by_tag(doc, start, end):
+        if end == len(doc):
+            return False
+        next_token = doc[end]
+        return any([next_token.tag_ == t for t in tag_list])
+
+    return _succeeded_by_tag
+
+
+def succeeded_by_regex(regex, sensitive=False) -> SpacyMatchPredicate:
+    def _succeeded_by_regex(doc, start, end):
+        if end == len(doc):
+            return False
+        next_token = doc[end]
+        flags = 0 if sensitive == True else re.IGNORECASE
+        return re.search(regex, next_token.text, flags) is not None
+
+    return _succeeded_by_regex
+
+
+def succeeded_by_same_token() -> SpacyMatchPredicate:
+    def _succeeded_by_same_token(doc, start, end):
+        if end == len(doc):
+            return False
+        token = doc[start]
+        next_token = doc[end]
+        return token.lower_ == next_token.lower_
+
+    return _succeeded_by_same_token
+
+
+def succeeded_by_punct() -> SpacyMatchPredicate:
+    def _succeeded_by_punct(doc, start, end):
+        if end == len(doc):
+            return False
+        next_token = doc[end]
+        return next_token.is_punct
+
+    return _succeeded_by_punct
+
+
+def succeeded_by_word() -> SpacyMatchPredicate:
+    def _succeeded_by_word(doc, start, end):
+        if end == len(doc):
+            return False
+        next_token = doc[end]
+        return not next_token.is_punct and not next_token.is_digit and not next_token.is_space
+
+    return _succeeded_by_word
+
+
+def is_start_of_sentence() -> SpacyMatchPredicate:
+    return lambda doc, start, end: doc[start].is_sent_start
+
+
+def is_end_of_sentence() -> SpacyMatchPredicate:
+    return lambda doc, start, end: doc[end].is_sent_end
+
+
+def sentence_ends_with(phrase) -> SpacyMatchPredicate:
+    def _sentence_ends_with(doc, start, end):
+        return doc[end:].text.lower().strip().endswith(phrase.lower())
+
+    return _sentence_ends_with
 
 
 # for compatibility with a previous version with spelling errors

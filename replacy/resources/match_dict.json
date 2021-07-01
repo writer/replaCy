@@ -85,6 +85,14 @@
       {
         "name": "part_of_compound",
         "match_if_predicate_is": false
+      },
+      {
+        "name": "preceded_by_lemma",
+        "kwargs": {
+          "lemma": "hello",
+          "distance": 22
+        },
+        "match_if_predicate_is": false
       }
     ],
     "test": {
@@ -213,7 +221,7 @@
     "comment": "You can use pattern_ref and from_template_id together",
     "test": {
       "positive": ["The pail was effective in its ability to carry water"],
-      "negative": []
+      "negative": ["The pail wasn't effective in its ability to carry water"]
     }
   },
   "dupe-test": {
@@ -234,7 +242,7 @@
     "comment": "This is a bad match, it is here to demonstrate overlap behavior",
     "test": {
       "positive": ["I will make something"],
-      "negative": []
+      "negative": ["I will build something"]
     }
   }
 }
