@@ -1,9 +1,12 @@
+from typing import List
+
+import os
 import string
 import warnings
-from typing import List
 
 from kenlm import Model as KenLMModel
 from spacy.tokens import Doc, Span, Token
+
 
 from replacy.default_scorer import Scorer
 
@@ -84,8 +87,8 @@ class KenLMScorer(Scorer):
 
         elif score_type == "perplexity":
             prob = 10.0 ** (score)
-            prob = 0.00000000001 if prob == 0 else prob
             return prob ** (-1 / word_count)
+
         else:
             raise NotImplementedError
 

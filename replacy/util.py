@@ -1,10 +1,9 @@
 import warnings
 from typing import Any, Callable, Dict, List, Union
 
-import spacy
 from functional import seq
 from jsonschema import validate
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 from replacy.db import get_match_dict_schema
 
@@ -17,9 +16,9 @@ def set_known_extensions(span_class):
     for ext in known_string_extensions:
         span_class.set_extension(ext, default="", force=True)
     expected_properties = (
-            ["patterns", "match_hook", "test"]
-            + known_list_extensions
-            + known_string_extensions
+        ["patterns", "match_hook", "test"]
+        + known_list_extensions
+        + known_string_extensions
     )
     return expected_properties
 
@@ -31,9 +30,9 @@ def get_novel_prop_defaults(match_dict, span_class, expected_properties):
     """
     novel_properties = (
         seq(match_dict.values())
-            .flat_map(lambda x: x.keys())
-            .distinct()
-            .difference(expected_properties)
+        .flat_map(lambda x: x.keys())
+        .distinct()
+        .difference(expected_properties)
     )
     novel_prop_defaults: Dict[str, Any] = {}
     for x in match_dict.values():
@@ -111,7 +110,7 @@ def eliminate_options(elem, chosen, rest):
 
 
 def get_predicates(
-        match_hooks, default_match_hooks, custom_match_hooks
+    match_hooks, default_match_hooks, custom_match_hooks
 ) -> List[Callable]:
     predicates = []
     for hook in match_hooks:
@@ -164,24 +163,3 @@ def make_doc_if_not_doc(text_or_doc: Union[str, Doc], nlp) -> Doc:
 
 def at_most_one_is_not_none(*args) -> bool:
     return len(list(filter(bool, [x is not None for x in args]))) <= 1
-
-
-def attach_debug_hook(matches: Dict[str, Dict]) -> Dict[str, Dict]:
-    new_matches = {}
-    for match_name, match_dict in matches.items():
-        new_dict = match_dict
-        hooks = match_dict.get("match_hook", [])
-        hooks.append(
-            {
-                "name": "debug_hook",
-                "args": match_name,
-                "match_if_predicate_is": True,
-            }
-        )
-        new_dict["match_hook"] = hooks
-        new_matches[match_name] = new_dict
-    return new_matches
-
-
-def spacy_version() -> int:
-    return int(spacy.__version__.split('.')[0])

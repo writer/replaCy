@@ -1,14 +1,14 @@
 import copy
 import itertools
 import logging
-import spacy
 import warnings
+from types import ModuleType
+from typing import Callable, List, Optional, Tuple
+
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.tokens.underscore import get_ext_args
-from types import ModuleType
-from typing import Callable, List, Optional, Tuple
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -23,7 +23,6 @@ from replacy.util import (
     make_doc_if_not_doc,
     set_known_extensions,
     validate_match_dict,
-    spacy_version
 )
 from replacy.version import __version__
 
@@ -98,18 +97,18 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-            self,
-            nlp,
-            match_dict=None,
-            forms_lookup=None,
-            custom_match_hooks: Optional[ModuleType] = None,
-            allow_multiple_whitespaces=False,
-            max_suggestions_count=1000,
-            lm_path=None,
-            filter_suggestions=False,
-            default_max_count=None,
-            debug=False,
-            SpanClass=Span,
+        self,
+        nlp,
+        match_dict=None,
+        forms_lookup=None,
+        custom_match_hooks: Optional[ModuleType] = None,
+        allow_multiple_whitespaces=False,
+        max_suggestions_count=1000,
+        lm_path=None,
+        filter_suggestions=False,
+        default_max_count=None,
+        debug=False,
+        SpanClass=Span,
     ):
         self.debug = debug
         # self.extended_span = extended_span
@@ -125,7 +124,9 @@ class ReplaceMatcher:
         self.spans: List[Span] = []
         self.max_suggestions_count = max_suggestions_count
         self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
-        self.suggestion_gen = SuggestionGenerator(nlp, forms_lookup, filter_suggestions, default_max_count)
+        self.suggestion_gen = SuggestionGenerator(
+            nlp, forms_lookup, filter_suggestions, default_max_count
+        )
         expected_properties = set_known_extensions(self.Span)
         self.novel_prop_defaults = get_novel_prop_defaults(
             self.match_dict, self.Span, expected_properties
@@ -169,12 +170,6 @@ class ReplaceMatcher:
 
             match_hooks = ps.get("match_hook", [])
             callback = self._get_callback(match_name, match_hooks)
-            self._add_matcher_rule(match_name, patterns, callback)
-
-    def _add_matcher_rule(self, match_name, patterns, callback):
-        if spacy_version() >= 3:
-            self.matcher.add(match_name, patterns, on_match=callback, greedy="LONGEST")
-        else:
             self.matcher.add(match_name, callback, patterns)
 
     def _get_callback(self, match_name, match_hooks):
@@ -266,7 +261,7 @@ class ReplaceMatcher:
         return spans
 
     def process_suggestions(
-            self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
+        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
     ):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
@@ -296,13 +291,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-            self,
-            component: PipelineComponent,
-            name: str = None,
-            before: str = None,
-            after: str = None,
-            first: bool = None,
-            last: bool = None,
+        self,
+        component: PipelineComponent,
+        name: str = None,
+        before: str = None,
+        after: str = None,
+        first: bool = None,
+        last: bool = None,
     ):
         """
         Add a component to the pipeline
@@ -357,14 +352,6 @@ class ReplaceMatcher:
                 f"Weird values passes to add_pipe, appending {name} to the end of the pipeline"
             )
             self.pipeline.append(pipeline_step)
-
-    def remove_pipe(self, name):
-        pipelines = []
-        for p in self.pipeline:
-            if p[0] == name:
-                continue
-            pipelines.append(p)
-        self.pipeline = pipelines
 
     def __call__(self, sent):
         # self.spans must be cleared - global
