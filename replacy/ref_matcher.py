@@ -1,7 +1,8 @@
 import copy
 
-import spacy
 from spacy.matcher import Matcher
+
+from replacy.util import spacy_version
 
 
 class RefMatcher:
@@ -130,7 +131,7 @@ class RefMatcher:
         # if no multitoken OPs
         # => everything has been matched
         if len(span) == len(non_op_pattern) and not any(
-            [RefMatcher.is_multitoken(p) for p in non_op_pattern]
+                [RefMatcher.is_multitoken(p) for p in non_op_pattern]
         ):
             pattern_ref = {k: [k] for k in range(len(non_op_pattern))}
             return self.shift_pattern_ref(pattern_ref, skipped_idx)
@@ -142,7 +143,10 @@ class RefMatcher:
 
         # A. get cropped patterns
         for i in range(len(non_op_pattern)):
-            self.matcher.add(i, None, non_op_pattern[i:])
+            if spacy_version() >= 3:
+                self.matcher.add(i, [non_op_pattern[i:]])
+            else:
+                self.matcher.add(i, None, non_op_pattern[i:])
 
         # B. get cropped spans
         docs = [span[i:].as_doc() for i in range(len(span))]

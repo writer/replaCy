@@ -109,7 +109,7 @@ If you use replaCy in your research, please cite with the following BibText
 ```bibtext
 @misc{havens2019replacy,
     title  = {SpaCy match and replace, maintaining conjugation},
-    author = {Sam Havens and Aneta Stal},
+    author = {Sam Havens, Aneta Stal, and Manhal Daaboul},
     url    = {https://github.com/Qordobacode/replaCy},
     year   = {2019}
 }

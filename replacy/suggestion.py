@@ -1,16 +1,15 @@
+import re
 import warnings
 
 from functional import seq
 
-from replacy.db import get_forms_lookup
 from replacy.inflector import Inflector
 from replacy.ref_matcher import RefMatcher
+from replacy.util import spacy_version
 
 
 class SuggestionGenerator:
-    def __init__(
-        self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None
-    ):
+    def __init__(self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
         self.ref_matcher = RefMatcher(nlp)
@@ -18,7 +17,7 @@ class SuggestionGenerator:
         self.default_max_count = default_max_count
 
     @staticmethod
-    def get_options(item, doc, start, end, pattern_ref):
+    def get_options(item, doc, start, end, pattern, pattern_ref):
         item_options = []
         # set
         if "TEXT" in item:
@@ -35,7 +34,7 @@ class SuggestionGenerator:
                     if len(refd_tokens):
                         min_i = start + min(refd_tokens)
                         max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i : max_i + 1].text
+                        refd_text = doc[min_i: max_i + 1].text
                     else:
                         refd_text = None
                 except:
@@ -58,7 +57,7 @@ class SuggestionGenerator:
                     if len(refd_tokens):
                         min_i = start + min(refd_tokens)
                         max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i : max_i + 1].text
+                        refd_text = doc[min_i: max_i + 1].text
                     else:
                         refd_text = None
                 except:
@@ -68,6 +67,19 @@ class SuggestionGenerator:
                     refd_text = doc[end + ref].text
 
             if refd_text:
+                if "REGEX" in item:
+                    regex_p = pattern[item["PATTERN_REF"]]
+                    # regex is with ignore case flag
+                    # so having this line to avoid exception when LOWER isn't in the pattern
+                    # if at any point needed to be specific or use case sensitive
+                    # we should add "REGEX_KEY" (TEXT or LOWER) in suggestions
+                    regex_pattern = regex_p["LOWER"]["REGEX"] if "LOWER" in regex_p else regex_p["TEXT"]["REGEX"]
+                    regex_replace = item["REGEX"]
+                    refd_text = re.sub(regex_pattern, regex_replace, refd_text, flags=re.IGNORECASE)
+
+                if "SUFFIX" in item:
+                    refd_text += item['SUFFIX']
+
                 item_options = [refd_text]
             else:
                 item_options = []
@@ -144,7 +156,7 @@ class SuggestionGenerator:
             # person / people
             # ox / oxen
             if all([el in item_options for el in ["person", "people"]]) or all(
-                [el in item_options for el in ["ox", "oxen"]]
+                    [el in item_options for el in ["ox", "oxen"]]
             ):
                 return 1
 
@@ -159,33 +171,33 @@ class SuggestionGenerator:
                 # set by pos
                 item_options = (
                     seq(item_options)
-                    .map(
+                        .map(
                         lambda x: self.inflector.inflect_or_lookup(
                             x, pos=inflection_value
                         )
                     )
-                    .flatten()
-                    .list()
+                        .flatten()
+                        .list()
                 )
             elif inflection_type == "tag":
                 # set by tag
                 item_options = (
                     seq(item_options)
-                    .map(
+                        .map(
                         lambda x: self.inflector.inflect_or_lookup(
                             x, tag=inflection_value
                         )
                     )
-                    .flatten()
-                    .list()
+                        .flatten()
+                        .list()
                 )
             else:
                 # get all forms
                 item_options = (
                     seq(item_options)
-                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
-                    .flatten()
-                    .list()
+                        .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
+                        .flatten()
+                        .list()
                 )
         # copy
         elif "FROM_TEMPLATE_ID" in item:
@@ -213,11 +225,11 @@ class SuggestionGenerator:
             if doc_index is not None:
                 item_options = (
                     seq(item_options)
-                    .map(
+                        .map(
                         lambda x: self.inflector.auto_inflect(doc, x, start + doc_index)
                     )
-                    .flatten()
-                    .list()
+                        .flatten()
+                        .list()
                 )
         return item_options
 
@@ -254,22 +266,21 @@ class SuggestionGenerator:
             - implied MAX_COUNT = 1 if words share the same lemma or are mutually exclusive, ex. a/an
         """
         # get token <-> pattern correspondence
-        pattern_ref = self.ref_matcher(doc[start:end], pattern)
+        pattern_obj = pattern[0] if spacy_version() >= 3 else pattern
+        pattern_ref = self.ref_matcher(doc[start:end], pattern_obj)
 
         suggestions = []
 
         for item in pre_suggestion:
             # get text
-            item_options = SuggestionGenerator.get_options(
-                item, doc, start, end, pattern_ref
-            )
+            item_options = SuggestionGenerator.get_options(item, doc, start, end, pattern_obj, pattern_ref)
 
             # guess or read max count count
             max_count = self.get_item_max_count(item, item_options)
 
             # inflect
             inflected_options = self.inflect(
-                item, item_options, pattern, pattern_ref, doc, start, end
+                item, item_options, pattern_obj, pattern_ref, doc, start, end
             )
 
             # case
