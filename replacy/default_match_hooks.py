@@ -453,7 +453,7 @@ def is_start_of_sentence() -> SpacyMatchPredicate:
 
 
 def is_end_of_sentence() -> SpacyMatchPredicate:
-    return lambda doc, start, end: doc[end].is_sent_end
+    return lambda doc, start, end: end == len(doc) or doc[end].is_sent_end
 
 
 def sentence_ends_with(phrase) -> SpacyMatchPredicate:
