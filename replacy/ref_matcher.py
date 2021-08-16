@@ -58,7 +58,10 @@ class RefMatcher:
             # change "*" to "+", to require 1+ instead of 0+
             elif op_pattern[op]["OP"] == "*":
                 op_pattern[op]["OP"] = "+"
-            self.matcher.add(op, None, op_pattern)
+            if spacy_version() >= 3:
+                self.matcher.add(op, [op_pattern])
+            else:
+                self.matcher.add(op, None, op_pattern)
 
         # check whether it still matches
         matches = self.matcher(span.as_doc())
