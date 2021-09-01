@@ -146,26 +146,12 @@ class ReplaceMatcher:
         for match_name, ps in self.match_dict.items():
             patterns = copy.deepcopy(ps["patterns"])
 
-            """
-            allow matching tokens separated by multiple whitespaces
-            they may appear after normalizing nonstandard whitespaces
-            ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
-            pattern can be preceded and followed by whitespace tokens
-            to keep preceded_by... with and succeeded_by... with match hooks working
-            """
-            if self.allow_multiple_whitespaces:
-
-                white_pattern = {"IS_SPACE": True, "OP": "?"}
-
-                normalized_patterns = [white_pattern]
-                for p in patterns:
-                    normalized_patterns += [p, white_pattern]
-                patterns = normalized_patterns
-
-            # remove custom attributes not supported by spaCy Matcher
-            for p in patterns:
-                if "TEMPLATE_ID" in p:
-                    del p["TEMPLATE_ID"]
+            if spacy_version() >= 3:
+                patterns = self._allow_multiple_whitespaces3(patterns)
+                patterns = self._remove_unsupported3(patterns)
+            else:
+                patterns = self._allow_multiple_whitespaces(patterns)
+                patterns = self._remove_unsupported(patterns)
 
             match_hooks = ps.get("match_hook", [])
             callback = self._get_callback(match_name, match_hooks)
@@ -176,6 +162,56 @@ class ReplaceMatcher:
             self.matcher.add(match_name, patterns, on_match=callback, greedy="LONGEST")
         else:
             self.matcher.add(match_name, callback, patterns)
+
+    def _allow_multiple_whitespaces(self, patterns):
+        """
+        allow matching tokens separated by multiple whitespaces
+        they may appear after normalizing nonstandard whitespaces
+        ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
+        pattern can be preceded and followed by whitespace tokens
+        to keep preceded_by... with and succeeded_by... with match hooks working
+        """
+        if self.allow_multiple_whitespaces:
+            white_pattern = {"IS_SPACE": True, "OP": "?"}
+            normalized_patterns = [white_pattern]
+            for p in patterns:
+                normalized_patterns += [p, white_pattern]
+            patterns = normalized_patterns
+        return patterns
+
+    def _allow_multiple_whitespaces3(self, patterns):
+        """
+        allow matching tokens separated by multiple whitespaces
+        they may appear after normalizing nonstandard whitespaces
+        ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
+        pattern can be preceded and followed by whitespace tokens
+        to keep preceded_by... with and succeeded_by... with match hooks working
+        """
+        if True:
+            white_pattern = {"IS_SPACE": True, "OP": "?"}
+            normalized_patterns = []
+            for pattern in patterns:
+                normalized_pattern = [white_pattern]
+                for p in pattern:
+                    normalized_pattern += [p, white_pattern]
+                normalized_patterns.append(normalized_pattern)
+            patterns = normalized_patterns
+        return patterns
+
+    def _remove_unsupported(self, patterns):
+        # remove custom attributes not supported by spaCy Matcher
+        for p in patterns:
+            if "TEMPLATE_ID" in p:
+                del p["TEMPLATE_ID"]
+        return patterns
+
+    def _remove_unsupported3(self, patterns):
+        # remove custom attributes not supported by spaCy Matcher
+        for pattern in patterns:
+            for p in pattern:
+                if "TEMPLATE_ID" in p:
+                    del p["TEMPLATE_ID"]
+        return patterns
 
     def _get_callback(self, match_name, match_hooks):
         """
