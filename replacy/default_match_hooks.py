@@ -154,8 +154,6 @@ def sentence_has(
 
     return _sentence_has
 
-    return _sentence_has
-
 
 def surrounded_by_phrase(phrase) -> SpacyMatchPredicate:
     def _surrounded_by_hook(doc, start, end):
