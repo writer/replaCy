@@ -140,21 +140,19 @@ def preceded_by_dep(dep) -> SpacyMatchPredicate:
     return _preceded_by_dep
 
 
-def sentence_has(phrases) -> SpacyMatchPredicate:
+def sentence_has(
+    phrases: Union[str, List[str]], case_sensitive=False
+) -> SpacyMatchPredicate:
     _check_args(phrases)
     if not isinstance(phrases, list):
         phrases = [phrases]
 
     def _sentence_has(doc, start, end):
-        sents = list(doc.sents)
-        totalnum = 0
-        sentnum = 0
-        for sent in sents:
-            totalnum += len(sent)
-            if start > totalnum - 1:
-                sentnum += 1
-        bools = [p in sents[sentnum].text.lower() for p in phrases]
-        return any(bools)
+        if case_sensitive:
+            return any(p in doc.text for p in phrases)
+        return any(p.lower() in doc.text.lower() for p in phrases)
+
+    return _sentence_has
 
     return _sentence_has
 
@@ -183,11 +181,11 @@ def part_of_compound() -> SpacyMatchPredicate:
 
 
 def relative_x_is_y(
-        children_or_ancestors: str,
-        pos_or_dep: str,
-        value: str,
-        text: Union[str, List] = None,
-        lemma: Union[str, List] = None,
+    children_or_ancestors: str,
+    pos_or_dep: str,
+    value: str,
+    text: Union[str, List] = None,
+    lemma: Union[str, List] = None,
 ) -> SpacyMatchPredicate:
     """
     This is a buggy, half-implementation of a DependencyMatcher, eventually
@@ -266,10 +264,10 @@ def part_of_phrase(phrase) -> SpacyMatchPredicate:
             secondpart = ""
             for part in parts[: i - 1]:
                 firstpart += part
-            for part in parts[i + 1:]:
+            for part in parts[i + 1 :]:
                 secondpart += part
             precedes = doc.text.lower()[: doc[start:end].start_char].endswith(firstpart)
-            follows = doc.text.lower()[doc[start:end].end_char:].startswith(secondpart)
+            follows = doc.text.lower()[doc[start:end].end_char :].startswith(secondpart)
             if precedes and follows:
                 return True
         return False
@@ -303,7 +301,9 @@ def debug_hook(match_name: str) -> SpacyMatchPredicate:
     """
 
     def _print_match(doc: Doc, start: int, end: int):
-        print(f"DEBUG:    {match_name} matched '{doc[start: end].text}'    token indices {start}:{end}")
+        print(
+            f"DEBUG:    {match_name} matched '{doc[start: end].text}'    token indices {start}:{end}"
+        )
         return True
 
     return _print_match
@@ -312,7 +312,7 @@ def debug_hook(match_name: str) -> SpacyMatchPredicate:
 def preceded_by_space() -> SpacyMatchPredicate:
     def _preceded_by_space(doc, start, end):
         span = doc[start:end]
-        return doc.text[span.start_char - 1] == ' '
+        return doc.text[span.start_char - 1] == " "
 
     return _preceded_by_space
 
@@ -332,7 +332,11 @@ def preceded_by_num() -> SpacyMatchPredicate:
         if start == 0:
             return False
         previous_token = doc[start - 1]
-        return previous_token.like_num or previous_token.pos_ == "NUM" or previous_token.is_digit
+        return (
+            previous_token.like_num
+            or previous_token.pos_ == "NUM"
+            or previous_token.is_digit
+        )
 
     return _preceded_by_number
 
@@ -443,7 +447,11 @@ def succeeded_by_word() -> SpacyMatchPredicate:
         if end == len(doc):
             return False
         next_token = doc[end]
-        return not next_token.is_punct and not next_token.is_digit and not next_token.is_space
+        return (
+            not next_token.is_punct
+            and not next_token.is_digit
+            and not next_token.is_space
+        )
 
     return _succeeded_by_word
 
