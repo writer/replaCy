@@ -17,13 +17,14 @@ from replacy.suggestion import SuggestionGenerator
 from replacy.suggestion_joiner import join_suggestions
 from replacy.util import (
     at_most_one_is_not_none,
+    attach_debug_hook,
     eliminate_options,
     get_novel_prop_defaults,
     get_predicates,
     make_doc_if_not_doc,
     set_known_extensions,
     validate_match_dict,
-    spacy_version
+    spacy_version,
 )
 from replacy.version import __version__
 
@@ -98,18 +99,18 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-            self,
-            nlp,
-            match_dict=None,
-            forms_lookup=None,
-            custom_match_hooks: Optional[ModuleType] = None,
-            allow_multiple_whitespaces=False,
-            max_suggestions_count=1000,
-            lm_path=None,
-            filter_suggestions=False,
-            default_max_count=None,
-            debug=False,
-            SpanClass=Span,
+        self,
+        nlp,
+        match_dict=None,
+        forms_lookup=None,
+        custom_match_hooks: Optional[ModuleType] = None,
+        allow_multiple_whitespaces=False,
+        max_suggestions_count=1000,
+        lm_path=None,
+        filter_suggestions=False,
+        default_max_count=None,
+        debug=False,
+        SpanClass=Span,
     ):
         self.debug = debug
         # self.extended_span = extended_span
@@ -119,13 +120,17 @@ class ReplaceMatcher:
         self.custom_match_hooks = custom_match_hooks
         self.nlp = nlp
         self.match_dict = match_dict if match_dict else get_match_dict()
+        if self.debug:
+            self.match_dict = attach_debug_hook(self.match_dict)
         self.allow_multiple_whitespaces = allow_multiple_whitespaces
         self.matcher = Matcher(self.nlp.vocab)
         self._init_matcher()
         self.spans: List[Span] = []
         self.max_suggestions_count = max_suggestions_count
         self.forms_lookup = forms_lookup if forms_lookup else get_forms_lookup()
-        self.suggestion_gen = SuggestionGenerator(nlp, forms_lookup, filter_suggestions, default_max_count)
+        self.suggestion_gen = SuggestionGenerator(
+            nlp, forms_lookup, filter_suggestions, default_max_count
+        )
         expected_properties = set_known_extensions(self.Span)
         self.novel_prop_defaults = get_novel_prop_defaults(
             self.match_dict, self.Span, expected_properties
@@ -302,7 +307,7 @@ class ReplaceMatcher:
         return spans
 
     def process_suggestions(
-            self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
+        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
     ):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
@@ -332,13 +337,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-            self,
-            component: PipelineComponent,
-            name: str = None,
-            before: str = None,
-            after: str = None,
-            first: bool = None,
-            last: bool = None,
+        self,
+        component: PipelineComponent,
+        name: str = None,
+        before: str = None,
+        after: str = None,
+        first: bool = None,
+        last: bool = None,
     ):
         """
         Add a component to the pipeline
