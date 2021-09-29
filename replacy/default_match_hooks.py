@@ -178,79 +178,74 @@ def part_of_compound() -> SpacyMatchPredicate:
     return _word_is_part_of_compound_hook
 
 
-def relative_x_is_y(
-    children_or_ancestors: str,
-    pos_or_dep: str,
-    value: str,
-    text: Union[str, List] = None,
-    lemma: Union[str, List] = None,
-) -> SpacyMatchPredicate:
-    """
-    This is a buggy, half-implementation of a DependencyMatcher, eventually
-    replaCy should allow access to spaCy's DependencyMatcher
+def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[str, List[str]]) -> SpacyMatchPredicate:
+    '''
+    This hook looks at all the tokens in a matched span to determine 
+    whether any of the children or the first ancestor have a given .pos_ or 
+    .dep_. This replaces the implementation of the Dependency Matcher in
+    the previous version by looking at token.children or token.ancestors in
+    the matched span.
 
-    Though it's grown, this was originally written because I wanted to
-    not match the verb `require` if its subject was clausal
-    aka if it had a child with child.dep_ == 'csubj'
-    So I will match_if_hook_is: false
-    e.g. usage looks like
-        {
+    Example hook:
+            {
             "name": "relative_x_is_y",
             "kwargs": {
                 "children_or_ancestors": "children",
                 "pos_or_dep": "dep",
-                "value": "csubj"
+                "value": "pobj"
             },
             "match_if_predicate_is": false
         }
-    And this can be read as "if any children of the matched pattern have
-    child.dep_ == csubj, then don't match"
-    """
+    '''
 
-    # asserting that values are acceptable lets us template them in
-    assert children_or_ancestors == "children" or children_or_ancestors == "ancestors"
-    assert pos_or_dep == "pos" or pos_or_dep == "dep"
-    assert text is None or lemma is None
+    if not isinstance(value, list):
+        value = [value]
 
-    def _relatives_x_is_y(doc, start, end):
-        def _helper(rel, pos_or_dep, value, text, lemma):
-            v = getattr(rel, f"{pos_or_dep}_", False)
-            if v == value:
-                if text == None and lemma == None:
-                    return True
-                elif text is not None:
-                    if type(text) == str:
-                        return rel.text == text
-                    elif type(text) == list:
-                        return any([rel.text == t for t in text])
-                elif lemma is not None:
-                    if type(lemma) == str:
-                        return rel.lemma_ == lemma
-                    elif type(lemma) == list:
-                        return any([rel.lemma_ == l for l in lemma])
-            else:
+    if not isinstance(children_or_ancestors, str):
+        raise TypeError("children_or_ancestors must be a string!")
+
+    if not isinstance(pos_or_dep, str):
+        raise TypeError("pos_or_dep must be a string!")
+
+    if children_or_ancestors not in ["children", "ancestors"]:
+        raise ValueError("children_or_ancestors must be set to either `children` or `ancestors`")
+
+    if pos_or_dep not in ["pos", "dep"]:
+        raise ValueError("pos_or_dep must be set to either `pos` or `dep`!")
+
+    def _in_children(doc, start, end):
+        if end >= len(doc):
+            return False
+        for val in value:
+            match_span = doc[start:end]
+            if pos_or_dep == "pos":
+                return any([child.pos_ == val for tok in match_span for child in tok.children])
+            elif pos_or_dep == "dep":
+                return any([child.dep_ == val for tok in match_span for child in tok.children])
+    
+    def _in_ancestors(doc, start, end):
+        if end >= len(doc):
+            return False
+        for val in value:
+            match_span = doc[start:end]
+            if pos_or_dep == "pos":
+                for t in match_span:
+                    ancestor = list(t.ancestors)[0] if len(list(t.ancestors)) else None
+                    if ancestor and ancestor.pos_ == val:
+                        return True
+                return False
+            if pos_or_dep == "dep":
+                for t in match_span:
+                    ancestor = list(t.ancestors)[0] if len(list(t.ancestors)) else None
+                    if ancestor and ancestor.dep_ == val:
+                        return True
                 return False
 
-        if end - start != 1:
-            # This only works if a single Token is matched,
-            # not a Span
-            print(
-                "replaCy match rule relative_x_is_y should only be used "
-                "on single token patterns, not for matching spans"
-            )
-            return False
-        matched_token = doc[start]
-        relatives = list(getattr(matched_token, children_or_ancestors, []))
-        if len(relatives) and children_or_ancestors == "ancestors":
-            # with ancestors we really only want the first, the rest are too unrelated
-            rel = relatives[0]
-            return _helper(rel, pos_or_dep, value, text, lemma)
-        else:
-            for rel in relatives:
-                return any([_helper(rel, pos_or_dep, value, text, lemma)])
-        return False
+    if children_or_ancestors == "children":
+        return _in_children
 
-    return _relatives_x_is_y
+    if children_or_ancestors == "ancestors":
+        return _in_ancestors
 
 
 def part_of_phrase(phrase) -> SpacyMatchPredicate:
