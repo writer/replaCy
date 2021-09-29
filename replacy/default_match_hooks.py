@@ -179,6 +179,25 @@ def part_of_compound() -> SpacyMatchPredicate:
 
 
 def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[str, List[str]]) -> SpacyMatchPredicate:
+    '''
+    This hook looks at all the tokens in a matched span to determine 
+    whether any of the children or the first ancestor have a given .pos_ or 
+    .dep_. This replaces the implementation of the Dependency Matcher in
+    the previous version by looking at token.children or token.ancestors in
+    the matched span.
+
+    Example hook:
+            {
+            "name": "relative_x_is_y",
+            "kwargs": {
+                "children_or_ancestors": "children",
+                "pos_or_dep": "dep",
+                "value": "pobj"
+            },
+            "match_if_predicate_is": false
+        }
+    '''
+
     if not isinstance(value, list):
         value = [value]
 
