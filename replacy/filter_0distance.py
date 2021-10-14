@@ -25,7 +25,7 @@ def filter_0distance_with_line_break(spans: List[ESpan]) -> List[ESpan]:
     filtered_spans = []
     for span in spans:
         if len(span.suggestions):
-            span_text = span.doc[span.start:span.end].text.rstrip("\r\n")
+            span_text = span.doc[span.start:span.end].text.rstrip(" \r\n")
             suggestions = []
             for suggestion in span.suggestions:
                 if span_text == suggestion:
