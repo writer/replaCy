@@ -1,14 +1,14 @@
 import copy
 import itertools
 import logging
-import spacy
 import warnings
+from types import ModuleType
+from typing import Callable, List, Optional, Tuple
+
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.tokens.underscore import get_ext_args
-from types import ModuleType
-from typing import Callable, List, Optional, Tuple
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -25,6 +25,7 @@ from replacy.util import (
     set_known_extensions,
     validate_match_dict,
     spacy_version,
+    spacy_has_alignment_info
 )
 from replacy.version import __version__
 
@@ -99,18 +100,18 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-        self,
-        nlp,
-        match_dict=None,
-        forms_lookup=None,
-        custom_match_hooks: Optional[ModuleType] = None,
-        allow_multiple_whitespaces=False,
-        max_suggestions_count=1000,
-        lm_path=None,
-        filter_suggestions=False,
-        default_max_count=None,
-        debug=False,
-        SpanClass=Span,
+            self,
+            nlp,
+            match_dict=None,
+            forms_lookup=None,
+            custom_match_hooks: Optional[ModuleType] = None,
+            allow_multiple_whitespaces=False,
+            max_suggestions_count=1000,
+            lm_path=None,
+            filter_suggestions=False,
+            default_max_count=None,
+            debug=False,
+            SpanClass=Span,
     ):
         self.debug = debug
         # self.extended_span = extended_span
@@ -124,6 +125,7 @@ class ReplaceMatcher:
             self.match_dict = attach_debug_hook(self.match_dict)
         self.allow_multiple_whitespaces = allow_multiple_whitespaces
         self.matcher = Matcher(self.nlp.vocab)
+        self.predicates = {}
         self._init_matcher()
         self.spans: List[Span] = []
         self.max_suggestions_count = max_suggestions_count
@@ -159,14 +161,14 @@ class ReplaceMatcher:
                 patterns = self._remove_unsupported(patterns)
 
             match_hooks = ps.get("match_hook", [])
-            callback = self._get_callback(match_name, match_hooks)
-            self._add_matcher_rule(match_name, patterns, callback)
+            self.predicates[match_name] = get_predicates(match_hooks, self.default_match_hooks, self.custom_match_hooks)
+            self._add_matcher_rule(match_name, patterns)
 
-    def _add_matcher_rule(self, match_name, patterns, callback):
+    def _add_matcher_rule(self, match_name, patterns):
         if spacy_version() >= 3:
-            self.matcher.add(match_name, patterns, on_match=callback, greedy="LONGEST")
+            self.matcher.add(match_name, patterns, greedy="LONGEST")
         else:
-            self.matcher.add(match_name, callback, patterns)
+            self.matcher.add(match_name, patterns)
 
     def _allow_multiple_whitespaces(self, patterns):
         """
@@ -184,7 +186,12 @@ class ReplaceMatcher:
             patterns = normalized_patterns
         return patterns
 
-    def _allow_multiple_whitespaces3(self, patterns):
+    @staticmethod
+    def _fix_alignment_multiple_whitespaces3(alignments):
+        return [int(a / 2) for a in alignments]
+
+    @staticmethod
+    def _allow_multiple_whitespaces3(patterns):
         """
         allow matching tokens separated by multiple whitespaces
         they may appear after normalizing nonstandard whitespaces
@@ -203,14 +210,16 @@ class ReplaceMatcher:
             patterns = normalized_patterns
         return patterns
 
-    def _remove_unsupported(self, patterns):
+    @staticmethod
+    def _remove_unsupported(patterns):
         # remove custom attributes not supported by spaCy Matcher
         for p in patterns:
             if "TEMPLATE_ID" in p:
                 del p["TEMPLATE_ID"]
         return patterns
 
-    def _remove_unsupported3(self, patterns):
+    @staticmethod
+    def _remove_unsupported3(patterns):
         # remove custom attributes not supported by spaCy Matcher
         for pattern in patterns:
             for p in pattern:
@@ -218,49 +227,42 @@ class ReplaceMatcher:
                     del p["TEMPLATE_ID"]
         return patterns
 
-    def _get_callback(self, match_name, match_hooks):
-        """
-        Most matches have the same logic to be executed each time a match is found
-        Some matches have extra logic, defined in match_hooks
-        """
-        # Get predicates once, callback is returned in a closure with this information
-        predicates = get_predicates(
-            match_hooks, self.default_match_hooks, self.custom_match_hooks
-        )
+    def _callback(self, doc, match):
+        if spacy_has_alignment_info():
+            match_id, start, end, alignments = match
+            alignments = ReplaceMatcher._fix_alignment_multiple_whitespaces3(alignments)
+        else:
+            match_id, start, end = match
+            alignments = None
 
-        def cb(matcher, doc, i, matches):
-            match_id, start, end = matches[i]
+        match_name = self.nlp.vocab[match_id].text
 
-            for pred in predicates:
-                try:
-                    if pred(doc, start, end):
-                        return None
-                except IndexError:
-                    break
-            match_name = self.nlp.vocab[match_id].text
-            span = self.Span(doc, start, end)
+        for pred in self.predicates[match_name]:
+            try:
+                if pred(doc, start, end):
+                    return None
+            except IndexError:
+                break
 
-            # find in match_dict if needed
-            span._.match_name = match_name
+        span = self.Span(doc, start, end)
 
-            pre_suggestions = self.match_dict[match_name]["suggestions"]
+        # find in match_dict if needed
+        span._.match_name = match_name
 
-            span._.suggestions = []
+        pre_suggestions = self.match_dict[match_name]["suggestions"]
 
-            for i, x in enumerate(pre_suggestions):
-                span._.suggestions += self.process_suggestions(
-                    x, doc, start, end, match_name, i
-                )
+        span._.suggestions = []
 
-            for novel_prop, default_value in self.novel_prop_defaults.items():
-                setattr(
-                    span._,
-                    novel_prop,
-                    self.match_dict[match_name].get(novel_prop, default_value),
-                )
-            self.spans.append(span)
+        for i, x in enumerate(pre_suggestions):
+            span._.suggestions += self.process_suggestions(x, doc, start, end, match_name, i, alignments)
 
-        return cb
+        for novel_prop, default_value in self.novel_prop_defaults.items():
+            setattr(
+                span._,
+                novel_prop,
+                self.match_dict[match_name].get(novel_prop, default_value),
+            )
+        self.spans.append(span)
 
     def _set_scorer(self, lm_path):
         # The following is not ideal
@@ -306,14 +308,12 @@ class ReplaceMatcher:
                 span._.suggestions = chosen
         return spans
 
-    def process_suggestions(
-        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id
-    ):
+    def process_suggestions(self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id, alignments):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
 
         suggestion_variants = self.suggestion_gen(
-            pre_suggestion, doc, start, end, pattern, pre_suggestion_id
+            pre_suggestion, doc, start, end, pattern, pre_suggestion_id, alignments
         )
         # assert there aren't more than max_suggestions_count
         # otherwise raise warning and return []
@@ -337,13 +337,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-        self,
-        component: PipelineComponent,
-        name: str = None,
-        before: str = None,
-        after: str = None,
-        first: bool = None,
-        last: bool = None,
+            self,
+            component: PipelineComponent,
+            name: str = None,
+            before: str = None,
+            after: str = None,
+            first: bool = None,
+            last: bool = None,
     ):
         """
         Add a component to the pipeline
@@ -412,7 +412,17 @@ class ReplaceMatcher:
         self.spans = []
         doc = make_doc_if_not_doc(sent, self.nlp)
         # this fills up self.spans
-        self.matcher(doc)
+        if spacy_has_alignment_info():
+            matches = self.matcher(doc, with_alignments=True)
+        else:
+            matches = self.matcher(doc)
+
+        # do the callback here instead of to pass it as callback on match
+        # here we alignment information to use for pattern ref
+        # we don't have this info on match callback
+        for match in matches:
+            self._callback(doc, match)
+
         for _, component in self.pipeline:
             # the default pipeline will:
             # sort suggestions by lm score

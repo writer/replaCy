@@ -4,15 +4,15 @@ import warnings
 from functional import seq
 
 from replacy.inflector import Inflector
-from replacy.ref_matcher import RefMatcher
-from replacy.util import spacy_version
+from replacy.ref_matcher import RefMatcher, RefMatcher36
+from replacy.util import spacy_version, spacy_has_alignment_info
 
 
 class SuggestionGenerator:
     def __init__(self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
-        self.ref_matcher = RefMatcher(nlp)
+        self.ref_matcher = RefMatcher36() if spacy_has_alignment_info() else RefMatcher(nlp)
         self.filter_suggestions = filter_suggestions
         self.default_max_count = default_max_count
 
@@ -30,13 +30,13 @@ class SuggestionGenerator:
             ref = int(item["PATTERN_REF"])
             if ref >= 0:
                 try:
-                    refd_tokens = pattern_ref[ref]
-                    if len(refd_tokens):
-                        min_i = start + min(refd_tokens)
-                        max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i: max_i + 1].text
-                    else:
-                        refd_text = None
+                    refd_text = None
+                    if ref in pattern_ref:
+                        refd_tokens = pattern_ref[ref]
+                        if len(refd_tokens):
+                            min_i = start + min(refd_tokens)
+                            max_i = start + max(refd_tokens)
+                            refd_text = doc[min_i: max_i + 1].text
                 except:
                     warnings.warn(
                         f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
@@ -246,7 +246,7 @@ class SuggestionGenerator:
                 item_options = [t.upper() for t in item_options]
         return item_options
 
-    def __call__(self, pre_suggestion, doc, start, end, pattern, pre_suggestion_id):
+    def __call__(self, pre_suggestion, doc, start, end, pattern, pre_suggestion_id, alignments):
         """
         Suggestion text:
             - set: "TEXT": "cat"
@@ -267,7 +267,7 @@ class SuggestionGenerator:
         """
         # get token <-> pattern correspondence
         pattern_obj = pattern[0] if spacy_version() >= 3 else pattern
-        pattern_ref = self.ref_matcher(doc[start:end], pattern_obj)
+        pattern_ref = self.ref_matcher(doc[start:end], pattern_obj, alignments)
 
         suggestions = []
 

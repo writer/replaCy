@@ -25,4 +25,4 @@ def test_custom_patterns(example):
     start = example["start"]
     end = example["end"]
 
-    assert hook(doc, start, end) == example["result"], f"{hook_name} should work"
+    assert hook(doc, start, end) == example["result"], f"{hook_name} should work" + str(example["result"])

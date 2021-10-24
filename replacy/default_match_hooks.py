@@ -222,7 +222,7 @@ def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[st
                 return any([child.pos_ == val for tok in match_span for child in tok.children])
             elif pos_or_dep == "dep":
                 return any([child.dep_ == val for tok in match_span for child in tok.children])
-    
+
     def _in_ancestors(doc, start, end):
         if end >= len(doc):
             return False
@@ -257,10 +257,10 @@ def part_of_phrase(phrase) -> SpacyMatchPredicate:
             secondpart = ""
             for part in parts[: i - 1]:
                 firstpart += part
-            for part in parts[i + 1 :]:
+            for part in parts[i + 1:]:
                 secondpart += part
             precedes = doc.text.lower()[: doc[start:end].start_char].endswith(firstpart)
-            follows = doc.text.lower()[doc[start:end].end_char :].startswith(secondpart)
+            follows = doc.text.lower()[doc[start:end].end_char:].startswith(secondpart)
             if precedes and follows:
                 return True
         return False
@@ -326,9 +326,9 @@ def preceded_by_num() -> SpacyMatchPredicate:
             return False
         previous_token = doc[start - 1]
         return (
-            previous_token.like_num
-            or previous_token.pos_ == "NUM"
-            or previous_token.is_digit
+                previous_token.like_num
+                or previous_token.pos_ == "NUM"
+                or previous_token.is_digit
         )
 
     return _preceded_by_number
@@ -441,9 +441,9 @@ def succeeded_by_word() -> SpacyMatchPredicate:
             return False
         next_token = doc[end]
         return (
-            not next_token.is_punct
-            and not next_token.is_digit
-            and not next_token.is_space
+                not next_token.is_punct
+                and not next_token.is_digit
+                and not next_token.is_space
         )
 
     return _succeeded_by_word

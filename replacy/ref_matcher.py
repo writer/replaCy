@@ -110,7 +110,8 @@ class RefMatcher:
             pattern_ref = self.insert_empty_idx(pattern_ref, idx)
         return pattern_ref
 
-    def __call__(self, span, orig_pattern):
+    # not all parameters are needed, adding it to have same signature as RefMatcher
+    def __call__(self, span, orig_pattern, alignments):
 
         pattern = copy.deepcopy(orig_pattern)
 
@@ -183,3 +184,11 @@ class RefMatcher:
         # shift by skipped ops
         pattern_ref = self.shift_pattern_ref(pattern_ref, skipped_idx)
         return pattern_ref
+
+
+class RefMatcher36:
+    def __call__(self, span, orig_pattern, alignments):
+        # not all parameters are needed, adding it to have same signature as RefMatcher
+        pattern_indexes = set(alignments)
+        return {pattern_idx: [span_token_idx for span_token_idx, pattern_index in enumerate(alignments)
+                              if pattern_index == pattern_idx] for pattern_idx in pattern_indexes}

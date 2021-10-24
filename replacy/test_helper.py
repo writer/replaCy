@@ -35,11 +35,11 @@ class MatchDictTestHelper(unittest.TestCase):
             spans = self.r_matcher(positive_sent)
             spans_from_this_rule = list(filter(lambda s: s._.match_name == match_name, spans))
             print(match_name, positive_sent)
-            assert len(spans_from_this_rule) > 0, "Positive case should trigger rule"
+            assert len(spans_from_this_rule) > 0, "Positive case should trigger rule: " + match_name + " --- " + positive_sent
 
     def test_negative(self):
         for (match_name, negative_sent) in self.negative_cases:
             spans = self.r_matcher(negative_sent)
             spans_from_this_rule = list(filter(lambda s: s._.match_name == match_name, spans))
             print(match_name, negative_sent)
-            assert len(spans_from_this_rule) == 0, "Negative case should NOT trigger rule"
+            assert len(spans_from_this_rule) == 0, "Negative case should NOT trigger rule: " + match_name + " --- " + negative_sent
