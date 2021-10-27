@@ -25,7 +25,7 @@ from replacy.util import (
     set_known_extensions,
     validate_match_dict,
     spacy_version,
-    spacy_has_alignment_info
+    spacy_has_alignment_info,
 )
 from replacy.version import __version__
 
@@ -100,18 +100,18 @@ class ReplaceMatcher:
     validate_match_dict = validate_match_dict
 
     def __init__(
-            self,
-            nlp,
-            match_dict=None,
-            forms_lookup=None,
-            custom_match_hooks: Optional[ModuleType] = None,
-            allow_multiple_whitespaces=False,
-            max_suggestions_count=1000,
-            lm_path=None,
-            filter_suggestions=False,
-            default_max_count=None,
-            debug=False,
-            SpanClass=Span,
+        self,
+        nlp,
+        match_dict=None,
+        forms_lookup=None,
+        custom_match_hooks: Optional[ModuleType] = None,
+        allow_multiple_whitespaces=False,
+        max_suggestions_count=1000,
+        lm_path=None,
+        filter_suggestions=False,
+        default_max_count=None,
+        debug=False,
+        SpanClass=Span,
     ):
         self.debug = debug
         # self.extended_span = extended_span
@@ -161,7 +161,9 @@ class ReplaceMatcher:
                 patterns = self._remove_unsupported(patterns)
 
             match_hooks = ps.get("match_hook", [])
-            self.predicates[match_name] = get_predicates(match_hooks, self.default_match_hooks, self.custom_match_hooks)
+            self.predicates[match_name] = get_predicates(
+                match_hooks, self.default_match_hooks, self.custom_match_hooks
+            )
             self._add_matcher_rule(match_name, patterns)
 
     def _add_matcher_rule(self, match_name, patterns):
@@ -254,7 +256,9 @@ class ReplaceMatcher:
         span._.suggestions = []
 
         for i, x in enumerate(pre_suggestions):
-            span._.suggestions += self.process_suggestions(x, doc, start, end, match_name, i, alignments)
+            span._.suggestions += self.process_suggestions(
+                x, doc, start, end, match_name, i, alignments
+            )
 
         for novel_prop, default_value in self.novel_prop_defaults.items():
             setattr(
@@ -308,7 +312,9 @@ class ReplaceMatcher:
                 span._.suggestions = chosen
         return spans
 
-    def process_suggestions(self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id, alignments):
+    def process_suggestions(
+        self, pre_suggestion, doc, start, end, match_name, pre_suggestion_id, alignments
+    ):
         # get token <-> pattern correspondence
         pattern = self.match_dict[match_name]["patterns"]
 
@@ -337,13 +343,13 @@ class ReplaceMatcher:
         return [x[0] for x in self.pipeline]
 
     def add_pipe(
-            self,
-            component: PipelineComponent,
-            name: str = None,
-            before: str = None,
-            after: str = None,
-            first: bool = None,
-            last: bool = None,
+        self,
+        component: PipelineComponent,
+        name: str = None,
+        before: str = None,
+        after: str = None,
+        first: bool = None,
+        last: bool = None,
     ):
         """
         Add a component to the pipeline

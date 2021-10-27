@@ -135,7 +135,7 @@ class RefMatcher:
         # if no multitoken OPs
         # => everything has been matched
         if len(span) == len(non_op_pattern) and not any(
-                [RefMatcher.is_multitoken(p) for p in non_op_pattern]
+            [RefMatcher.is_multitoken(p) for p in non_op_pattern]
         ):
             pattern_ref = {k: [k] for k in range(len(non_op_pattern))}
             return self.shift_pattern_ref(pattern_ref, skipped_idx)
@@ -190,5 +190,11 @@ class RefMatcher36:
     def __call__(self, span, orig_pattern, alignments):
         # not all parameters are needed, adding it to have same signature as RefMatcher
         pattern_indexes = set(alignments)
-        return {pattern_idx: [span_token_idx for span_token_idx, pattern_index in enumerate(alignments)
-                              if pattern_index == pattern_idx] for pattern_idx in pattern_indexes}
+        return {
+            pattern_idx: [
+                span_token_idx
+                for span_token_idx, pattern_index in enumerate(alignments)
+                if pattern_index == pattern_idx
+            ]
+            for pattern_idx in pattern_indexes
+        }
