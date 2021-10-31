@@ -1,14 +1,14 @@
 import copy
 import itertools
 import logging
-import spacy
 import warnings
+from types import ModuleType
+from typing import Callable, List, Optional, Tuple
+
 from functional import seq
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.tokens.underscore import get_ext_args
-from types import ModuleType
-from typing import Callable, List, Optional, Tuple
 
 from replacy import default_match_hooks
 from replacy.db import get_forms_lookup, get_match_dict, load_lm
@@ -24,7 +24,6 @@ from replacy.util import (
     make_doc_if_not_doc,
     set_known_extensions,
     validate_match_dict,
-    spacy_version,
 )
 from replacy.version import __version__
 
@@ -151,22 +150,15 @@ class ReplaceMatcher:
         for match_name, ps in self.match_dict.items():
             patterns = copy.deepcopy(ps["patterns"])
 
-            if spacy_version() >= 3:
-                patterns = self._allow_multiple_whitespaces3(patterns)
-                patterns = self._remove_unsupported3(patterns)
-            else:
-                patterns = self._allow_multiple_whitespaces(patterns)
-                patterns = self._remove_unsupported(patterns)
+            patterns = self._allow_multiple_whitespaces(patterns)
+            patterns = self._remove_unsupported(patterns)
 
             match_hooks = ps.get("match_hook", [])
             callback = self._get_callback(match_name, match_hooks)
             self._add_matcher_rule(match_name, patterns, callback)
 
     def _add_matcher_rule(self, match_name, patterns, callback):
-        if spacy_version() >= 3:
-            self.matcher.add(match_name, patterns, on_match=callback, greedy="LONGEST")
-        else:
-            self.matcher.add(match_name, callback, patterns)
+        self.matcher.add(match_name, callback, patterns)
 
     def _allow_multiple_whitespaces(self, patterns):
         """
@@ -184,38 +176,11 @@ class ReplaceMatcher:
             patterns = normalized_patterns
         return patterns
 
-    def _allow_multiple_whitespaces3(self, patterns):
-        """
-        allow matching tokens separated by multiple whitespaces
-        they may appear after normalizing nonstandard whitespaces
-        ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
-        pattern can be preceded and followed by whitespace tokens
-        to keep preceded_by... with and succeeded_by... with match hooks working
-        """
-        if True:
-            white_pattern = {"IS_SPACE": True, "OP": "?"}
-            normalized_patterns = []
-            for pattern in patterns:
-                normalized_pattern = [white_pattern]
-                for p in pattern:
-                    normalized_pattern += [p, white_pattern]
-                normalized_patterns.append(normalized_pattern)
-            patterns = normalized_patterns
-        return patterns
-
     def _remove_unsupported(self, patterns):
         # remove custom attributes not supported by spaCy Matcher
         for p in patterns:
             if "TEMPLATE_ID" in p:
                 del p["TEMPLATE_ID"]
-        return patterns
-
-    def _remove_unsupported3(self, patterns):
-        # remove custom attributes not supported by spaCy Matcher
-        for pattern in patterns:
-            for p in pattern:
-                if "TEMPLATE_ID" in p:
-                    del p["TEMPLATE_ID"]
         return patterns
 
     def _get_callback(self, match_name, match_hooks):
