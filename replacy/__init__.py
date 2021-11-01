@@ -23,9 +23,7 @@ from replacy.util import (
     get_predicates,
     make_doc_if_not_doc,
     set_known_extensions,
-    validate_match_dict,
-    spacy_version,
-    spacy_has_alignment_info,
+    validate_match_dict
 )
 from replacy.version import __version__
 
@@ -153,47 +151,21 @@ class ReplaceMatcher:
         for match_name, ps in self.match_dict.items():
             patterns = copy.deepcopy(ps["patterns"])
 
-            if spacy_version() >= 3:
-                patterns = self._allow_multiple_whitespaces3(patterns)
-                patterns = self._remove_unsupported3(patterns)
-            else:
-                patterns = self._allow_multiple_whitespaces(patterns)
-                patterns = self._remove_unsupported(patterns)
+            patterns = self._allow_multiple_whitespaces(patterns)
+            patterns = self._remove_unsupported(patterns)
 
             match_hooks = ps.get("match_hook", [])
             self.predicates[match_name] = get_predicates(
                 match_hooks, self.default_match_hooks, self.custom_match_hooks
             )
-            self._add_matcher_rule(match_name, patterns)
-
-    def _add_matcher_rule(self, match_name, patterns):
-        if spacy_version() >= 3:
             self.matcher.add(match_name, patterns, greedy="LONGEST")
-        else:
-            self.matcher.add(match_name, patterns)
-
-    def _allow_multiple_whitespaces(self, patterns):
-        """
-        allow matching tokens separated by multiple whitespaces
-        they may appear after normalizing nonstandard whitespaces
-        ex. "Here␣is␣a\u180E\u200Bproblem." -> "Here␣is␣a␣␣problem."
-        pattern can be preceded and followed by whitespace tokens
-        to keep preceded_by... with and succeeded_by... with match hooks working
-        """
-        if self.allow_multiple_whitespaces:
-            white_pattern = {"IS_SPACE": True, "OP": "?"}
-            normalized_patterns = [white_pattern]
-            for p in patterns:
-                normalized_patterns += [p, white_pattern]
-            patterns = normalized_patterns
-        return patterns
 
     @staticmethod
-    def _fix_alignment_multiple_whitespaces3(alignments):
+    def _fix_alignment_multiple_whitespaces(alignments):
         return [int(a / 2) for a in alignments]
 
     @staticmethod
-    def _allow_multiple_whitespaces3(patterns):
+    def _allow_multiple_whitespaces(patterns):
         """
         allow matching tokens separated by multiple whitespaces
         they may appear after normalizing nonstandard whitespaces
@@ -215,14 +187,6 @@ class ReplaceMatcher:
     @staticmethod
     def _remove_unsupported(patterns):
         # remove custom attributes not supported by spaCy Matcher
-        for p in patterns:
-            if "TEMPLATE_ID" in p:
-                del p["TEMPLATE_ID"]
-        return patterns
-
-    @staticmethod
-    def _remove_unsupported3(patterns):
-        # remove custom attributes not supported by spaCy Matcher
         for pattern in patterns:
             for p in pattern:
                 if "TEMPLATE_ID" in p:
@@ -230,12 +194,8 @@ class ReplaceMatcher:
         return patterns
 
     def _callback(self, doc, match):
-        if spacy_has_alignment_info():
-            match_id, start, end, alignments = match
-            alignments = ReplaceMatcher._fix_alignment_multiple_whitespaces3(alignments)
-        else:
-            match_id, start, end = match
-            alignments = None
+        match_id, start, end, alignments = match
+        alignments = ReplaceMatcher._fix_alignment_multiple_whitespaces(alignments)
 
         match_name = self.nlp.vocab[match_id].text
 
@@ -418,10 +378,7 @@ class ReplaceMatcher:
         self.spans = []
         doc = make_doc_if_not_doc(sent, self.nlp)
         # this fills up self.spans
-        if spacy_has_alignment_info():
-            matches = self.matcher(doc, with_alignments=True)
-        else:
-            matches = self.matcher(doc)
+        matches = self.matcher(doc, with_alignments=True)
 
         # do the callback here instead of to pass it as callback on match
         # here we alignment information to use for pattern ref

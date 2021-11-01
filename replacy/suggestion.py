@@ -4,8 +4,7 @@ import warnings
 from functional import seq
 
 from replacy.inflector import Inflector
-from replacy.ref_matcher import RefMatcher, RefMatcher36
-from replacy.util import spacy_version, spacy_has_alignment_info
+from replacy.ref_matcher import RefMatcher
 
 
 class SuggestionGenerator:
@@ -14,9 +13,7 @@ class SuggestionGenerator:
     ):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
-        self.ref_matcher = (
-            RefMatcher36() if spacy_has_alignment_info() else RefMatcher(nlp)
-        )
+        self.ref_matcher = (RefMatcher())
         self.filter_suggestions = filter_suggestions
         self.default_max_count = default_max_count
 
@@ -278,7 +275,7 @@ class SuggestionGenerator:
             - implied MAX_COUNT = 1 if words share the same lemma or are mutually exclusive, ex. a/an
         """
         # get token <-> pattern correspondence
-        pattern_obj = pattern[0] if spacy_version() >= 3 else pattern
+        pattern_obj = pattern[0]
         pattern_ref = self.ref_matcher(doc[start:end], pattern_obj, alignments)
 
         suggestions = []

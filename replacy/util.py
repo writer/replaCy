@@ -181,16 +181,3 @@ def attach_debug_hook(matches: Dict[str, Dict]) -> Dict[str, Dict]:
         new_dict["match_hook"] = hooks
         new_matches[match_name] = new_dict
     return new_matches
-
-
-def spacy_version() -> int:
-    return int(spacy.__version__.split(".")[0])
-
-
-def spacy_has_alignment_info() -> int:
-    # alignment info added in spacy 3.0.6
-    parts = spacy.__version__.split(".")
-    major = int(parts[0])
-    minor = int(parts[1])
-    micro = int(parts[2]) if len(parts) == 3 else 0
-    return (major >= 4) or (major == 3 and minor >= 1) or (major == 3 and micro >= 6)
