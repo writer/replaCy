@@ -157,8 +157,7 @@
         "kwargs": {
           "children_or_ancestors": "ancestors",
           "pos_or_dep": "dep",
-          "value": "ROOT",
-          "lemma": ["assemble", "attach"]
+          "value": "ROOT"
         },
         "match_if_predicate_is": true
       }
@@ -173,8 +172,7 @@
     "test": {
       "positive": [
         "Avengers, assemble the team together!",
-        "We assembled the furniture together.",
-        "We will have attached the pieces together"
+        "We assembled the furniture together."
       ],
       "negative": [
         "After we assemble, we can go together",

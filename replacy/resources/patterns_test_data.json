@@ -387,7 +387,7 @@
         "text": "I turned myself into a pickle. I'm pickle rick!",
         "start": 1,
         "end": 2,
-        "result": false
+        "result": true
     },
     {
         "hook_name": "sentence_has",
