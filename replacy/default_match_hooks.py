@@ -178,10 +178,12 @@ def part_of_compound() -> SpacyMatchPredicate:
     return _word_is_part_of_compound_hook
 
 
-def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[str, List[str]]) -> SpacyMatchPredicate:
-    '''
-    This hook looks at all the tokens in a matched span to determine 
-    whether any of the children or the first ancestor have a given .pos_ or 
+def relative_x_is_y(
+    children_or_ancestors: str, pos_or_dep: str, value: Union[str, List[str]]
+) -> SpacyMatchPredicate:
+    """
+    This hook looks at all the tokens in a matched span to determine
+    whether any of the children or the first ancestor have a given .pos_ or
     .dep_. This replaces the implementation of the Dependency Matcher in
     the previous version by looking at token.children or token.ancestors in
     the matched span.
@@ -196,7 +198,7 @@ def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[st
             },
             "match_if_predicate_is": false
         }
-    '''
+    """
 
     if not isinstance(value, list):
         value = [value]
@@ -208,7 +210,9 @@ def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[st
         raise TypeError("pos_or_dep must be a string!")
 
     if children_or_ancestors not in ["children", "ancestors"]:
-        raise ValueError("children_or_ancestors must be set to either `children` or `ancestors`")
+        raise ValueError(
+            "children_or_ancestors must be set to either `children` or `ancestors`"
+        )
 
     if pos_or_dep not in ["pos", "dep"]:
         raise ValueError("pos_or_dep must be set to either `pos` or `dep`!")
@@ -219,10 +223,14 @@ def relative_x_is_y(children_or_ancestors: str, pos_or_dep: str, value: Union[st
         for val in value:
             match_span = doc[start:end]
             if pos_or_dep == "pos":
-                return any([child.pos_ == val for tok in match_span for child in tok.children])
+                return any(
+                    [child.pos_ == val for tok in match_span for child in tok.children]
+                )
             elif pos_or_dep == "dep":
-                return any([child.dep_ == val for tok in match_span for child in tok.children])
-    
+                return any(
+                    [child.dep_ == val for tok in match_span for child in tok.children]
+                )
+
     def _in_ancestors(doc, start, end):
         if end >= len(doc):
             return False

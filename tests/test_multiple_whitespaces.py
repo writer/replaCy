@@ -7,7 +7,7 @@ nlp = spacy.load("en_core_web_sm")
 # minimal match dict with many whitespaces
 match_dict = {
     "extract-revenge": {
-        "patterns": [{"LEMMA": "extract", "TEMPLATE_ID": 1}],
+        "patterns": [[{"LEMMA": "extract", "TEMPLATE_ID": 1}]],
         "suggestions": [[{"TEXT": "exact", "FROM_TEMPLATE_ID": 1}]],
         "match_hook": [
             {

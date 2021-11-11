@@ -14,7 +14,7 @@ with open("replacy/resources/match_dict.json", "r") as md:
 r_matcher.match_dict.update(
     {
         "sometest": {
-            "patterns": [{"LOWER": "sometest"}],
+            "patterns": [[{"LOWER": "sometest"}]],
             "suggestions": [[{"TEXT": "this part isn't the point"}]],
             "test": {"positive": ["positive test"], "negative": ["negative test"]},
             "comment": "this is an example comment",

@@ -12,12 +12,12 @@ nlp = spacy.load("en_core_web_sm")
 
 match_dict = {
     "hyuck": {
-        "patterns": [{"LOWER": "hyuck"}],
+        "patterns": [[{"LOWER": "hyuck"}]],
         "suggestions": [[{"TEXT": "ha"}]],
         "test": {"positive": [], "negative": []},
     },
     "hyuck-hyuck": {
-        "patterns": [{"LOWER": "hyuck"}, {"LOWER": "hyuck"}],
+        "patterns": [[{"LOWER": "hyuck"}, {"LOWER": "hyuck"}]],
         "suggestions": [[{"TEXT": "haha"}]],
         "test": {"positive": [], "negative": []},
     },
