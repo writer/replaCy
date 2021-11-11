@@ -1,61 +1,30 @@
-name: Always build, also publish to PyPi if on master branch
-
+name: Build and test
 on: push
-
 jobs:
-  build:
-    name: Build and test; publish if on master
-    runs-on: ubuntu-18.04
+  lint:
+    name: Lint with Black
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+      - uses: "lgeiger/black-action@master"
         with:
-          python-version: 3.7
-      - name: Install deps
-        run: |
-          echo "quitely installing dependencies..."
-          python3 -m pip install -qr requirements.txt
-          python3 -m pip install -qr requirements-dev.txt
-      - name: Run tests
-        run: |
-          python3 test.py
-      - name: Bump version
-        if: github.ref == 'refs/heads/master'
-        run: |
-          BASE_STRING=$(cat VERSION)
-          BASE_LIST=($(echo "$BASE_STRING" | tr '.' ' '))
-          V_MAJOR=${BASE_LIST[0]}
-          V_MINOR=${BASE_LIST[1]}
-          V_PATCH=${BASE_LIST[2]}
-          echo -e "Current version: $BASE_STRING"
-          echo "OLD_VERSION=$BASE_STRING" >> $GITHUB_ENV
-          V_MINOR=$((V_MINOR + 1))
-          V_PATCH=0
-          SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
-          echo "Bumping minor version in VERSION file"
-          echo ""
-          echo "$SUGGESTED_VERSION" > VERSION
-          echo "VERSION=$SUGGESTED_VERSION" >> $GITHUB_ENV
-      - name: create source dist
-        if: github.ref == 'refs/heads/master'
-        run: |
-          echo "generating source distribution - this step bumps version.py to match VERSION"
-          echo ""
-          python3 setup.py sdist
-      - name: Publish 🐍📦 to PyPi
-        # Tried this as a separate job, but the artifact doesn't persist
-        if: github.ref == 'refs/heads/master'
-        uses: pypa/gh-action-pypi-publish@master
+          args: ". --check"
+  pytest:
+    name: pytest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: abatilo/actions-poetry@v1.5.0
         with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
-      - name: Commit and push version increment
-        if: github.ref == 'refs/heads/master'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "Bump version to $VERSION"
-          git tag $VERSION
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git push --follow-tags origin master --force
+          python_version: ${{ matrix.python-version }}
+          poetry_version: 1.1.8
+          args: install
+      - name: Run pytest
+        uses: abatilo/actions-poetry@v1.5.0
+        with:
+          python_version: ${{ matrix.python-version }}
+          poetry_version: 1.1.8
+          args: run python -m pytest
