@@ -3,8 +3,8 @@ name = "replaCy"
 version = "3.0.0"
 description = "ReplaCy = spaCy Matcher + pyInflect. Create rules, correct sentences."
 authors = [
-    "melisa-qordoba <melisa@writer.com>",
-    "sam-qordoba <sam.havens@writer.com>",
+    "melisa-writer <melisa@writer.com>",
+    "sam-writer <sam.havens@writer.com>",
     "manhal-daaboul <manhal@writer.com>"
 ]
 readme = "README.md"

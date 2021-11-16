@@ -12,7 +12,6 @@
 ### Reminders
 
 - [ ] I incremented the version appropriately (now in `pyproject.toml`).
-- [ ] I added my changes to the CHANGELOG.md.
 - [ ] I added tests to cover my changes.
 - [ ] I tested my changes with a replaCy-based service to confirm my changes don't break it.
 - [ ] If my changes require documentation updates, I updated the documentation
