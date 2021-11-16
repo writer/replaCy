@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "replaCy"
+version = "3.2.0"
+description = "ReplaCy = spaCy Matcher + pyInflect. Create rules, correct sentences."
+authors = [
+    "melisa-writer <melisa@writer.com>",
+    "sam-writer <sam.havens@writer.com>",
+    "manhal-daaboul <manhal@writer.com>"
+]
+readme = "README.md"
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+jsonschema = "^2.6.0"
+lemminflect = "0.2.1"
+pyfunctional = "^1.2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.3.2"
+spacy=  "^3.0.6"
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz" }
+kenlm = { git = "https://github.com/kpu/kenlm", rev = "master" }
