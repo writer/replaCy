@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "replaCy"
-version = "3.0.0"
+version = "3.2.0"
 description = "ReplaCy = spaCy Matcher + pyInflect. Create rules, correct sentences."
 authors = [
     "melisa-writer <melisa@writer.com>",
