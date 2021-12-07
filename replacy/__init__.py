@@ -158,7 +158,7 @@ class ReplaceMatcher:
             self.predicates[match_name] = get_predicates(
                 match_hooks, self.default_match_hooks, self.custom_match_hooks
             )
-            self.matcher.add(match_name, patterns, greedy="LONGEST")
+            self.matcher.add(match_name, patterns)
 
     @staticmethod
     def _fix_alignment_multiple_whitespaces(alignments):
