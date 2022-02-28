@@ -7,7 +7,7 @@ nlp = spacy.load("en_core_web_sm")
 
 match_dict = {
     "match-1": {
-        "patterns": [
+        "patterns": [[
             {"POS": {"NOT_IN": ["ADJ"]}, "OP": "*"},
             {"POS": "ADJ", "OP": "*"},
             {"POS": "NOUN"},
@@ -15,7 +15,7 @@ match_dict = {
             {"LEMMA": "deliver"},
             {"IS_PUNCT": False, "OP": "*"},
             {"IS_PUNCT": True},
-        ],
+        ]],
         "suggestions": [
             [
                 {"TEXT": "A"},
@@ -32,7 +32,7 @@ match_dict = {
         "test": {"positive": [], "negative": []},
     },
     "match-2": {
-        "patterns": [
+        "patterns": [[
             {"TEXT": "I"},
             {"POS": "VERB",},
             {"POS": "DET", "OP": "?"},
@@ -40,7 +40,7 @@ match_dict = {
             {"POS": "DET"},
             {"POS": "ADJ", "OP": "*"},
             {"POS": "NOUN"},
-        ],
+        ]],
         "suggestions": [
             [
                 {"PATTERN_REF": 0},

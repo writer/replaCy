@@ -1,248 +1,323 @@
 {
-  "extract-revenge": {
-    "patterns": [
-      {
-        "LEMMA": "extract",
-        "TEMPLATE_ID": 1
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": "exact",
-          "FROM_TEMPLATE_ID": 1
+    "extract-revenge": {
+        "patterns": [
+            [
+                {
+                    "LEMMA": "extract",
+                    "TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "exact",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "succeeded_by_phrase",
+                "args": "revenge",
+                "match_if_predicate_is": true
+            }
+        ],
+        "test": {
+            "positive": [
+                "And at the same time extract revenge on those he so despises?",
+                "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
+            ],
+            "negative": [
+                "Mother flavours her custards with lemon extract."
+            ]
         }
-      ]
-    ],
-    "match_hook": [
-      {
-        "name": "succeeded_by_phrase",
-        "args": "revenge",
-        "match_if_predicate_is": true
-      }
-    ],
-    "test": {
-      "positive": [
-        "And at the same time extract revenge on those he so despises?",
-        "Watch as Tampa Bay extracts revenge against his former Los Angeles Rams team."
-      ],
-      "negative": ["Mother flavours her custards with lemon extract."]
-    }
-  },
-  "make-due": {
-    "patterns": [
-      {
-        "LEMMA": "make",
-        "TEMPLATE_ID": 1
-      },
-      {
-        "LOWER": "due"
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": "make",
-          "FROM_TEMPLATE_ID": 1
-        },
-        {
-          "TEXT": "do"
-        }
-      ]
-    ],
-    "test": {
-      "positive": [
-        "Viewers will have to make due with tired re-runs and second-rate movies."
-      ],
-      "negative": [
-        "The empty vessels make the greatest sound.",
-        "I'll make do.",
-        "She only has sons; she'll make dudes."
-      ]
     },
-    "comment": "this is an example comment",
-    "description": "The expression is \"make do\".",
-    "category": "R:VERB",
-    "unexpected": "replaCy should handle arbitrary properties here, and attach them to the relevant spans"
-  },
-  "requirement": {
-    "patterns": [
-      {
-        "LEMMA": "requirement",
-        "POS": "NOUN",
-        "TEMPLATE_ID": 1
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": "need",
-          "FROM_TEMPLATE_ID": 1
-        }
-      ]
-    ],
-    "match_hook": [
-      {
-        "name": "part_of_compound",
-        "match_if_predicate_is": false
-      },
-      {
-        "name": "preceded_by_lemma",
-        "kwargs": {
-          "lemma": "hello",
-          "distance": 22
+    "make-due": {
+        "patterns": [
+            [
+                {
+                    "LEMMA": "make",
+                    "TEMPLATE_ID": 1
+                },
+                {
+                    "LOWER": "due"
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "make",
+                    "FROM_TEMPLATE_ID": 1
+                },
+                {
+                    "TEXT": "do"
+                }
+            ]
+        ],
+        "test": {
+            "positive": [
+                "Viewers will have to make due with tired re-runs and second-rate movies."
+            ],
+            "negative": [
+                "The empty vessels make the greatest sound.",
+                "I'll make do.",
+                "She only has sons; she'll make dudes."
+            ]
         },
-        "match_if_predicate_is": false
-      }
-    ],
-    "test": {
-      "positive": [
-        "The system has the following requirements: blood of a virgin, suffering, and cat food.",
-        "Our immediate requirement is extra staff."
-      ],
-      "negative": [
-        "There is a residency requirement for obtaining citizenship.",
-        "What is the minimum entrance requirement for this course?"
-      ]
+        "comment": "this is an example comment",
+        "description": "The expression is \"make do\".",
+        "category": "R:VERB",
+        "unexpected": "replaCy should handle arbitrary properties here, and attach them to the relevant spans"
+    },
+    "requirement": {
+        "patterns": [
+            [
+                {
+                    "LEMMA": "requirement",
+                    "POS": "NOUN",
+                    "TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "need",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "part_of_compound",
+                "match_if_predicate_is": false
+            },
+            {
+                "name": "preceded_by_lemma",
+                "kwargs": {
+                    "lemma": "hello",
+                    "distance": 22
+                },
+                "match_if_predicate_is": false
+            }
+        ],
+        "test": {
+            "positive": [
+                "The system has the following requirements: blood of a virgin, suffering, and cat food.",
+                "Our immediate requirement is extra staff."
+            ],
+            "negative": [
+                "There is a residency requirement for obtaining citizenship.",
+                "What is the minimum entrance requirement for this course?"
+            ]
+        }
+    },
+    "lt-example": {
+        "patterns": [
+            [
+                {
+                    "LOWER": {
+                        "IN": [
+                            "have",
+                            "has"
+                        ]
+                    }
+                },
+                {
+                    "TAG": {
+                        "IN": [
+                            "VBD",
+                            "VBP",
+                            "VB",
+                            "VBN"
+                        ]
+                    }
+                },
+                {
+                    "TAG": {
+                        "NOT_IN": [
+                            "VBG"
+                        ]
+                    }
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "PATTERN_REF": 0
+                },
+                {
+                    "PATTERN_REF": 1,
+                    "INFLECTION": "VBN"
+                },
+                {
+                    "PATTERN_REF": 2
+                }
+            ]
+        ],
+        "description": "Possible agreement error -- use past participle here",
+        "test": {
+            "positive": [
+                "I have eat this"
+            ],
+            "negative": [
+                "I ate this"
+            ]
+        }
+    },
+    "assemble_attach_together": {
+        "comment": "Match the word together if it is a modifier of any form of assemble or attach, and suggest removing it",
+        "patterns": [
+            [
+                {
+                    "LOWER": "together"
+                }
+            ]
+        ],
+        "match_hook": [
+            {
+                "name": "relative_x_is_y",
+                "kwargs": {
+                    "children_or_ancestors": "ancestors",
+                    "pos_or_dep": "dep",
+                    "value": "ROOT"
+                },
+                "match_if_predicate_is": true
+            }
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": ""
+                }
+            ]
+        ],
+        "test": {
+            "positive": [
+                "Avengers, assemble the team together!",
+                "We assembled the furniture together."
+            ],
+            "negative": [
+                "After we assemble, we can go together",
+                "My arm is attached to my shoulder, I like that they are together."
+            ]
+        }
+    },
+    "effective_in_its_ability": {
+        "patterns": [
+            [
+                {
+                    "LEMMA": "be",
+                    "TEMPLATE_ID": 1
+                },
+                {
+                    "LOWER": "effective"
+                },
+                {
+                    "LOWER": "in"
+                },
+                {
+                    "DEP": "poss"
+                },
+                {
+                    "LOWER": "ability"
+                },
+                {
+                    "LOWER": "to"
+                },
+                {
+                    "POS": "VERB"
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "effectively"
+                },
+                {
+                    "PATTERN_REF": 6,
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "comment": "You can use pattern_ref and from_template_id together",
+        "test": {
+            "positive": [
+                "The pail was effective in its ability to carry water"
+            ],
+            "negative": [
+                "The pail wasn't effective in its ability to carry water"
+            ]
+        }
+    },
+    "dupe-test": {
+        "patterns": [
+            [
+                {
+                    "LEMMA": "make",
+                    "TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "TEXT": "build",
+                    "FROM_TEMPLATE_ID": 1
+                }
+            ]
+        ],
+        "comment": "This is a bad match, it is here to demonstrate overlap behavior",
+        "test": {
+            "positive": [
+                "I will make something"
+            ],
+            "negative": [
+                "I will build something"
+            ]
+        }
+    },
+    "all-caps": {
+        "patterns": [
+            [
+                {
+                    "IS_UPPER": true,
+                    "TEXT": {
+                        "REGEX": "^[A-Z]{2,}$"
+                    },
+                    "OP": "+"
+                },
+                {
+                    "IS_LOWER": true,
+                    "OP": "*"
+                }
+            ]
+        ],
+        "suggestions": [
+            [
+                {
+                    "PATTERN_REF": 0,
+                    "REPLACY_OP": "LOWER"
+                },
+                {
+                    "PATTERN_REF": 1,
+                    "REPLACY_OP": "UPPER"
+                }
+            ]
+        ],
+        "test": {
+            "positive": [
+                "TENNIS is a lovely game.",
+                "THIS IS SO SILLY",
+                "THIS IS SO SILLY waay to go"
+            ],
+            "negative": [
+                "this is so silly"
+            ]
+        }
     }
-  },
-  "lt-example": {
-    "patterns": [
-      {
-        "LOWER": {
-          "IN": ["have", "has"]
-        }
-      },
-      {
-        "TAG": {
-          "IN": ["VBD", "VBP", "VB"]
-        }
-      },
-      {
-        "TAG": {
-          "NOT_IN": ["VBG"]
-        }
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "PATTERN_REF": 0
-        },
-        {
-          "PATTERN_REF": 1,
-          "INFLECTION": "VBN"
-        },
-        {
-          "PATTERN_REF": 2
-        }
-      ]
-    ],
-    "description": "Possible agreement error -- use past participle here",
-    "test": {
-      "positive": ["I have eat this"],
-      "negative": ["I have eaten this"]
-    }
-  },
-  "assemble_attach_together": {
-    "comment": "Match the word together if it is a modifier of any form of assemble or attach, and suggest removing it",
-    "patterns": [
-      {
-        "LOWER": "together"
-      }
-    ],
-    "match_hook": [
-      {
-        "name": "relative_x_is_y",
-        "kwargs": {
-          "children_or_ancestors": "ancestors",
-          "pos_or_dep": "dep",
-          "value": "ROOT",
-          "lemma": ["assemble", "attach"]
-        },
-        "match_if_predicate_is": true
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": ""
-        }
-      ]
-    ],
-    "test": {
-      "positive": [
-        "Avengers, assemble the team together!",
-        "We assembled the furniture together.",
-        "We will have attached the pieces together"
-      ],
-      "negative": [
-        "After we assemble, we can go together",
-        "My arm is attached to my shoulder, I like that they are together."
-      ]
-    }
-  },
-  "effective_in_its_ability": {
-    "patterns": [
-      {
-        "LEMMA": "be",
-        "TEMPLATE_ID": 1
-      },
-      {
-        "LOWER": "effective"
-      },
-      {
-        "LOWER": "in"
-      },
-      {
-        "DEP": "poss"
-      },
-      {
-        "LOWER": "ability"
-      },
-      {
-        "LOWER": "to"
-      },
-      {
-        "POS": "VERB"
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": "effectively"
-        },
-        {
-          "PATTERN_REF": 6,
-          "FROM_TEMPLATE_ID": 1
-        }
-      ]
-    ],
-    "comment": "You can use pattern_ref and from_template_id together",
-    "test": {
-      "positive": ["The pail was effective in its ability to carry water"],
-      "negative": ["The pail wasn't effective in its ability to carry water"]
-    }
-  },
-  "dupe-test": {
-    "patterns": [
-      {
-        "LEMMA": "make",
-        "TEMPLATE_ID": 1
-      }
-    ],
-    "suggestions": [
-      [
-        {
-          "TEXT": "build",
-          "FROM_TEMPLATE_ID": 1
-        }
-      ]
-    ],
-    "comment": "This is a bad match, it is here to demonstrate overlap behavior",
-    "test": {
-      "positive": ["I will make something"],
-      "negative": ["I will build something"]
-    }
-  }
 }

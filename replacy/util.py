@@ -17,9 +17,9 @@ def set_known_extensions(span_class):
     for ext in known_string_extensions:
         span_class.set_extension(ext, default="", force=True)
     expected_properties = (
-            ["patterns", "match_hook", "test"]
-            + known_list_extensions
-            + known_string_extensions
+        ["patterns", "match_hook", "test"]
+        + known_list_extensions
+        + known_string_extensions
     )
     return expected_properties
 
@@ -31,9 +31,9 @@ def get_novel_prop_defaults(match_dict, span_class, expected_properties):
     """
     novel_properties = (
         seq(match_dict.values())
-            .flat_map(lambda x: x.keys())
-            .distinct()
-            .difference(expected_properties)
+        .flat_map(lambda x: x.keys())
+        .distinct()
+        .difference(expected_properties)
     )
     novel_prop_defaults: Dict[str, Any] = {}
     for x in match_dict.values():
@@ -111,7 +111,7 @@ def eliminate_options(elem, chosen, rest):
 
 
 def get_predicates(
-        match_hooks, default_match_hooks, custom_match_hooks
+    match_hooks, default_match_hooks, custom_match_hooks
 ) -> List[Callable]:
     predicates = []
     for hook in match_hooks:
@@ -181,7 +181,3 @@ def attach_debug_hook(matches: Dict[str, Dict]) -> Dict[str, Dict]:
         new_dict["match_hook"] = hooks
         new_matches[match_name] = new_dict
     return new_matches
-
-
-def spacy_version() -> int:
-    return int(spacy.__version__.split('.')[0])

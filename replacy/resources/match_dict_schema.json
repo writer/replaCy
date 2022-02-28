@@ -2,7 +2,7 @@
     "title": "Schema for validation ReplaCy Match/Replace format",
     "type": "object",
     "definitions": {
-        "replacyAttribute": {
+        "replacyAttributeItem": {
             "type": "object",
             "properties": {
                 "ORTH": {
@@ -53,6 +53,13 @@
                 }
             }
         },
+        "replacyAttribute": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/replacyAttributeItem"
+            },
+            "minItems": 1
+        },
         "spacyOperator": {
             "type": "object",
             "additionalProperties": false,
@@ -97,7 +104,7 @@
                 }
             }
         },
-        "textOperator":{
+        "textOperator": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -144,6 +151,13 @@
                 },
                 "PATTERN_REF": {
                     "type": "integer"
+                },
+                "REPLACY_OP": {
+                    "enum": [
+                        "LOWER",
+                        "UPPER",
+                        "TITLE"
+                    ]
                 },
                 "INFLECTION": {
                     "enum": [
@@ -216,7 +230,7 @@
         }
     },
     "patternProperties": {
-        "^[a-z_][A-Za-z0-9_]*$": {
+        "^[a-z_-][A-Za-z0-9_-]*$": {
             "type": "object",
             "properties": {
                 "patterns": {

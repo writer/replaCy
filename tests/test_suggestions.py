@@ -9,7 +9,7 @@ nlp = spacy.load("en_core_web_sm")
 
 match_dict = {
     "match-1": {
-        "patterns": [
+        "patterns": [[
             {"LOWER": {"IN": ["they", "she"]}},
             {"LEMMA": "read", "TEMPLATE_ID": 1},
             {"LOWER": "us"},
@@ -19,7 +19,7 @@ match_dict = {
             {"LOWER": {"IN": ["themselves", "herself"]}},
             {"LEMMA": "have", "OP": "*"},
             {"LEMMA": {"IN": ["write", "made"]}},
-        ],
+        ]],
         "suggestions": [
             [
                 {"PATTERN_REF": 0},

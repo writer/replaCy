@@ -5,14 +5,15 @@ from functional import seq
 
 from replacy.inflector import Inflector
 from replacy.ref_matcher import RefMatcher
-from replacy.util import spacy_version
 
 
 class SuggestionGenerator:
-    def __init__(self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None):
+    def __init__(
+        self, nlp, forms_lookup=None, filter_suggestions=False, default_max_count=None
+    ):
         self.forms_lookup = forms_lookup
         self.inflector = Inflector(nlp=nlp, forms_lookup=self.forms_lookup)
-        self.ref_matcher = RefMatcher(nlp)
+        self.ref_matcher = (RefMatcher())
         self.filter_suggestions = filter_suggestions
         self.default_max_count = default_max_count
 
@@ -30,13 +31,13 @@ class SuggestionGenerator:
             ref = int(item["PATTERN_REF"])
             if ref >= 0:
                 try:
-                    refd_tokens = pattern_ref[ref]
-                    if len(refd_tokens):
-                        min_i = start + min(refd_tokens)
-                        max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i: max_i + 1].text
-                    else:
-                        refd_text = None
+                    refd_text = None
+                    if ref in pattern_ref:
+                        refd_tokens = pattern_ref[ref]
+                        if len(refd_tokens):
+                            min_i = start + min(refd_tokens)
+                            max_i = start + max(refd_tokens)
+                            refd_text = doc[min_i : max_i + 1].text
                 except:
                     warnings.warn(
                         f"Ref matcher failed for span {doc[start:end]} and {pattern_ref}."
@@ -57,7 +58,7 @@ class SuggestionGenerator:
                     if len(refd_tokens):
                         min_i = start + min(refd_tokens)
                         max_i = start + max(refd_tokens)
-                        refd_text = doc[min_i: max_i + 1].text
+                        refd_text = doc[min_i : max_i + 1].text
                     else:
                         refd_text = None
                 except:
@@ -73,12 +74,18 @@ class SuggestionGenerator:
                     # so having this line to avoid exception when LOWER isn't in the pattern
                     # if at any point needed to be specific or use case sensitive
                     # we should add "REGEX_KEY" (TEXT or LOWER) in suggestions
-                    regex_pattern = regex_p["LOWER"]["REGEX"] if "LOWER" in regex_p else regex_p["TEXT"]["REGEX"]
+                    regex_pattern = (
+                        regex_p["LOWER"]["REGEX"]
+                        if "LOWER" in regex_p
+                        else regex_p["TEXT"]["REGEX"]
+                    )
                     regex_replace = item["REGEX"]
-                    refd_text = re.sub(regex_pattern, regex_replace, refd_text, flags=re.IGNORECASE)
+                    refd_text = re.sub(
+                        regex_pattern, regex_replace, refd_text, flags=re.IGNORECASE
+                    )
 
                 if "SUFFIX" in item:
-                    refd_text += item['SUFFIX']
+                    refd_text += item["SUFFIX"]
 
                 item_options = [refd_text]
             else:
@@ -156,7 +163,7 @@ class SuggestionGenerator:
             # person / people
             # ox / oxen
             if all([el in item_options for el in ["person", "people"]]) or all(
-                    [el in item_options for el in ["ox", "oxen"]]
+                [el in item_options for el in ["ox", "oxen"]]
             ):
                 return 1
 
@@ -171,33 +178,33 @@ class SuggestionGenerator:
                 # set by pos
                 item_options = (
                     seq(item_options)
-                        .map(
+                    .map(
                         lambda x: self.inflector.inflect_or_lookup(
                             x, pos=inflection_value
                         )
                     )
-                        .flatten()
-                        .list()
+                    .flatten()
+                    .list()
                 )
             elif inflection_type == "tag":
                 # set by tag
                 item_options = (
                     seq(item_options)
-                        .map(
+                    .map(
                         lambda x: self.inflector.inflect_or_lookup(
                             x, tag=inflection_value
                         )
                     )
-                        .flatten()
-                        .list()
+                    .flatten()
+                    .list()
                 )
             else:
                 # get all forms
                 item_options = (
                     seq(item_options)
-                        .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
-                        .flatten()
-                        .list()
+                    .map(lambda x: self.inflector.inflect_or_lookup(x, pos=None))
+                    .flatten()
+                    .list()
                 )
         # copy
         elif "FROM_TEMPLATE_ID" in item:
@@ -225,11 +232,11 @@ class SuggestionGenerator:
             if doc_index is not None:
                 item_options = (
                     seq(item_options)
-                        .map(
+                    .map(
                         lambda x: self.inflector.auto_inflect(doc, x, start + doc_index)
                     )
-                        .flatten()
-                        .list()
+                    .flatten()
+                    .list()
                 )
         return item_options
 
@@ -246,7 +253,9 @@ class SuggestionGenerator:
                 item_options = [t.upper() for t in item_options]
         return item_options
 
-    def __call__(self, pre_suggestion, doc, start, end, pattern, pre_suggestion_id):
+    def __call__(
+        self, pre_suggestion, doc, start, end, pattern, pre_suggestion_id, alignments
+    ):
         """
         Suggestion text:
             - set: "TEXT": "cat"
@@ -266,14 +275,16 @@ class SuggestionGenerator:
             - implied MAX_COUNT = 1 if words share the same lemma or are mutually exclusive, ex. a/an
         """
         # get token <-> pattern correspondence
-        pattern_obj = pattern[0] if spacy_version() >= 3 else pattern
-        pattern_ref = self.ref_matcher(doc[start:end], pattern_obj)
+        pattern_obj = pattern[0]
+        pattern_ref = self.ref_matcher(doc[start:end], pattern_obj, alignments)
 
         suggestions = []
 
         for item in pre_suggestion:
             # get text
-            item_options = SuggestionGenerator.get_options(item, doc, start, end, pattern_obj, pattern_ref)
+            item_options = SuggestionGenerator.get_options(
+                item, doc, start, end, pattern_obj, pattern_ref
+            )
 
             # guess or read max count count
             max_count = self.get_item_max_count(item, item_options)
